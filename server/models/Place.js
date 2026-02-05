@@ -11,7 +11,7 @@ const placeSchema = new mongoose.Schema({
   // Feature 10: Mood-Based Discovery 
   moodTags: [{ 
     type: String, 
-    enum: ['Peace', 'Party', 'Thrill', 'Romantic', 'Spiritual'] 
+    enum: ['Peace', 'Party', 'Thrill', 'Romantic', 'Spiritual', 'Family'] 
   }],
 
   // Feature 8: Hidden Gems vs Tourist Traps 
