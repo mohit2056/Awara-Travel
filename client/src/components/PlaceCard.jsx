@@ -1,9 +1,10 @@
 import React from 'react';
 import { MapPin, Music, IndianRupee } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const PlaceCard = ({ place }) => {
   return (
-    <div className="glass rounded-xl overflow-hidden hover:scale-105 transition duration-300 group">
+    <Link to={`/place/${place._id}`} className="block glass rounded-xl overflow-hidden hover:scale-105 transition duration-300 group">
       {/* Image Section */}
       <div className="relative h-48 overflow-hidden">
         <img 
@@ -45,7 +46,7 @@ const PlaceCard = ({ place }) => {
           ))}
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 
