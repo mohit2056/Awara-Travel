@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const placeRoutes = require('./routes/placeRoutes'); // ✅ Routes import kiye
+const authRoutes = require('./routes/authRoutes');
 
 dotenv.config();
 
@@ -14,6 +15,7 @@ app.use(express.json());
 
 // Routes ko connect karo
 app.use('/api/places', placeRoutes); // ✅ Ab saare URL '/api/places' se shuru honge
+app.use('/api/users', authRoutes); // ✅ new line 
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI)

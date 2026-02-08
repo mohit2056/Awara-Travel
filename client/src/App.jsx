@@ -5,7 +5,8 @@ import Home from './pages/Home';
 import Discover from './pages/Discover';
 import PlaceDetails from './pages/PlaceDetails';
 import SonicPlayer from './components/SonicPlayer';
-
+import Signup from './pages/Sigup';
+import Login from './pages/Login';
 
 function App() {
   return (
@@ -17,6 +18,9 @@ function App() {
           <Route path="/discover" element={<Discover />} />
           <Route path="/place/:id" element={<PlaceDetails />} />
           <Route path="/sonic-player" element={<SonicPlayer />} /> {/* 🎵 Test Route for Sonic Player */}
+          <Route path="/signup" element={<Signup/>}/>
+          <Route path="/Login" element={<Login/>}/>
+          
         </Routes>
       </main>
       <Footer />
