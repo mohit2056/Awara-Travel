@@ -1,19 +1,18 @@
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, User, LogOut } from 'lucide-react'; // Icons import kiye
-import { AuthContext } from '../context/AuthContext'; // Context laya
+import { Menu, X, User, LogOut } from 'lucide-react';
+import { AuthContext } from '../context/AuthContext';
 import logo from '../assets/logo.png';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  
-  // 🔐 Context se User aur Logout function nikala
+
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
-    navigate('/'); // Logout ke baad Home pe
+    navigate('/');
   };
 
   return (
@@ -38,15 +37,21 @@ const Navbar = () => {
             <div className="ml-10 flex items-baseline space-x-8">
               <Link to="/" className="hover:text-purple-400 transition">Home</Link>
               <Link to="/discover" className="hover:text-purple-400 transition">Discover</Link>
+
+              {/* ✅ Correct Desktop Blind Travel Link */}
+              <Link to="/blind-travel" className="hover:text-purple-400 transition flex items-center gap-1">
+                🎲 <span className="hidden lg:inline">Blind Travel</span>
+              </Link>
+
               <Link to="/about" className="hover:text-purple-400 transition">About</Link>
-              
-              {/* 👇 SMART LOGIC: Agar User hai toh Naam, nahi toh Join Button */}
+
+              {/* User Logic */}
               {user ? (
                 <div className="flex items-center gap-4 ml-4">
                   <span className="text-purple-400 font-bold flex items-center gap-2">
                     <User size={18} /> Hi, {user.username}
                   </span>
-                  <button 
+                  <button
                     onClick={handleLogout}
                     className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-2 rounded-full hover:bg-red-500 hover:text-white transition flex items-center gap-2 text-sm"
                   >
@@ -54,7 +59,7 @@ const Navbar = () => {
                   </button>
                 </div>
               ) : (
-                <Link to="/login"> {/* Login page par bhejo */}
+                <Link to="/login">
                   <button className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-full transition text-white shadow-lg">
                     Join Now
                   </button>
@@ -80,13 +85,18 @@ const Navbar = () => {
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             <Link to="/" className="block px-3 py-2 hover:bg-white/10 rounded-md text-white">Home</Link>
             <Link to="/discover" className="block px-3 py-2 hover:bg-white/10 rounded-md text-white">Discover</Link>
-            
+
+            {/* ✅ Correct Mobile Blind Travel Link */}
+            <Link to="/blind-travel" className="block px-3 py-2 hover:bg-white/10 rounded-md text-white items-center gap-2">
+              🎲 Blind Travel
+            </Link>
+
             {user ? (
               <>
                 <div className="px-3 py-2 text-purple-400 font-bold border-t border-white/10 mt-2">
                   Hi, {user.username} 👋
                 </div>
-                <button 
+                <button
                   onClick={handleLogout}
                   className="w-full text-left px-3 py-2 text-red-400 hover:bg-red-500/10 rounded-md flex items-center gap-2"
                 >

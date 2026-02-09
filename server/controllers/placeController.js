@@ -13,7 +13,7 @@ const seedDatabase = async (req, res) => {
         images: ["https://plus.unsplash.com/premium_photo-1697729600773-4b616794695b?q=80&w=2070&auto=format&fit=crop"],
         moodTags: ["Peace", "Romantic"],
         isHiddenGem: true,
-        avgCost: 8000,
+        avgCost: 8000, // ✅ Hum 'avgCost' use kar rahe hain
         musicUrl: "https://actions.google.com/sounds/v1/nature/ocean_waves_lapping.ogg",
         mustTryDishes: ["Prawn Curry", "Coconut Water"],
       },
@@ -39,7 +39,6 @@ const seedDatabase = async (req, res) => {
         isHiddenGem: true,
         avgCost: 6000,
         musicUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3",
-        // 👇 Yahan check kar: "Siddu" zaroor hona chahiye
         mustTryDishes: ["Siddu", "Trout Fish", "Thukpa"],
       },
       {
@@ -57,9 +56,9 @@ const seedDatabase = async (req, res) => {
     ];
 
     await Place.insertMany(places);
-    res.send("✅ Database seeded! Siddu is ready in Jibhi.");
+    res.json({ message: "✅ Database seeded! Siddu is ready in Jibhi." });
   } catch (error) {
-    res.status(500).send("Error: " + error.message);
+    res.status(500).json({ error: "Error: " + error.message });
   }
 };
 
@@ -74,18 +73,18 @@ const getPlaces = async (req, res) => {
       filter.isHiddenGem = true;
     }
 
-    // 🔍 SEARCH LOGIC (Ye part critical hai)
+    // 🔍 SEARCH LOGIC
     if (search) {
-      console.log("Searching for:", search); // Terminal mein check karna ye print ho rha hai kya
+      console.log("Searching for:", search);
       filter.$or = [
-        { name: { $regex: search, $options: 'i' } },       // Name match
-        { location: { $regex: search, $options: 'i' } },   // Location match
-        { mustTryDishes: { $regex: search, $options: 'i' } } // ✅ Dish match
+        { name: { $regex: search, $options: 'i' } },
+        { location: { $regex: search, $options: 'i' } },
+        { mustTryDishes: { $regex: search, $options: 'i' } }
       ];
     }
 
     const places = await Place.find(filter);
-    console.log(`Found ${places.length} places`); // Ye bhi print hoga
+    console.log(`Found ${places.length} places`);
     res.json(places);
   } catch (error) {
     console.error(error);
@@ -97,11 +96,48 @@ const getPlaces = async (req, res) => {
 const getPlaceById = async (req, res) => {
   try {
     const place = await Place.findById(req.params.id);
-    if (!place) return res.status(404).json({ message: "Place nahi mili bhai" });
+    if (!place) return res.status(404).json({ message: "We are still finalizing the spot." });
     res.json(place);
   } catch (error) {
     res.status(500).json({ error: "Server Error" });
   }
 };
 
-module.exports = { seedDatabase, getPlaces, getPlaceById };
+// 🛠️ Controller 4: Create Place (JO MISSING THA) 🚨
+const createPlace = async (req, res) => {
+    try {
+      const newPlace = new Place(req.body);
+      const savedPlace = await newPlace.save();
+      res.status(201).json(savedPlace);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+};
+
+// 🎲 Controller 5: BLIND DATE (Random Place)
+const getRandomPlace = async (req, res) => {
+  const { budget } = req.query;
+
+  try {
+    // 1. Budget Filter
+    // ⚠️ IMPORTANT FIX: 'price' ki jagah 'avgCost' use kiya kyunki database mein wahi hai
+    const places = await Place.find({ avgCost: { $lte: Number(budget) } });
+
+    if (places.length === 0) {
+      return res.status(404).json({ message:"This is a bit of a tight budget we will need more resources to make it work.😅"});
+    }
+
+    // 2. Random Selection
+    const randomIndex = Math.floor(Math.random() * places.length);
+    const randomPlace = places[randomIndex];
+
+    // 3. Send Response
+    res.json(randomPlace);
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ✅ Export mein 'createPlace' add kiya
+module.exports = { seedDatabase, getPlaces, getPlaceById, createPlace, getRandomPlace };

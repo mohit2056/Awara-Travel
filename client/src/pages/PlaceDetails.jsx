@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { MapPin, IndianRupee, ArrowLeft } from 'lucide-react';
+import { MapPin, IndianRupee, ArrowLeft, Share2 } from 'lucide-react';
+import { AuthContext } from '../context/AuthContext';
 import PlaceMap from '../components/PlaceMap';
 import SonicPlayer from '../components/SonicPlayer';
 
@@ -8,7 +9,8 @@ const PlaceDetails = () => {
   const { id } = useParams();
   const [place, setPlace] = useState(null);
   const [tripType, setTripType] = useState(1); // 0: Budget, 1: Standard, 2: Luxury
-
+  const { user } = useContext(AuthContext); 
+  
   // 📡 Data Fetching
   useEffect(() => {
     const fetchPlace = async () => {
@@ -23,9 +25,29 @@ const PlaceDetails = () => {
     fetchPlace();
   }, [id]);
 
+  // 🔗 Simple Share Logic (No External Library needed)
+  const handleShare = async () => {
+    const shareData = {
+      title: `Check out ${place.name} on Awara!`,
+      text: `Found this amazing place: ${place.name} in ${place.location}. Let's go!`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData); // Mobile native share
+      } else {
+        await navigator.clipboard.writeText(window.location.href); // PC Copy Link
+        alert("Link copied to clipboard! 📋");
+      }
+    } catch (err) {
+      console.log("Share cancel hua");
+    }
+  };
+
   if (!place) return <div className="text-center py-20 text-xl">Loading Vibes... ⏳</div>;
 
-  // 🛡️ Error Handling (Agar ID galat ho ya data delete ho gaya ho)
+  // 🛡️ Error Handling
   if (!place.images || place.message) {
     return (
       <div className="text-center py-20">
@@ -38,12 +60,11 @@ const PlaceDetails = () => {
     );
   }
 
-  // 💰 Kharcha Estimator Logic
   const calculateCost = () => {
     const baseCost = place.avgCost;
-    if (tripType === 0) return baseCost * 0.6; // Budget
-    if (tripType === 2) return baseCost * 1.8; // Luxury
-    return baseCost; // Standard
+    if (tripType === 0) return baseCost * 0.6;
+    if (tripType === 2) return baseCost * 1.8;
+    return baseCost;
   };
 
   return (
@@ -66,13 +87,23 @@ const PlaceDetails = () => {
             )}
           </div>
           
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">{place.name}</h1>
+          <div className="flex justify-between items-start">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">{place.name}</h1>
+            {/* Share Button (Simple & Clean) */}
+            <button 
+              onClick={handleShare}
+              className="bg-white/10 p-3 rounded-full hover:bg-white/20 transition text-purple-400"
+              title="Share this place"
+            >
+              <Share2 size={24} />
+            </button>
+          </div>
+
           <p className="flex items-center gap-2 text-gray-400 mb-6 text-lg">
             <MapPin size={20} className="text-purple-400" /> {place.location}
           </p>
           <p className="text-gray-300 leading-relaxed text-lg mb-6">{place.description}</p>
           
-          {/* Tags */}
           <div className="flex flex-wrap gap-3">
             {place.moodTags.map((tag, index) => (
               <span key={index} className="bg-white/10 px-4 py-2 rounded-full text-purple-200 border border-white/20">
@@ -90,9 +121,9 @@ const PlaceDetails = () => {
 
           <div className="mb-10">
             <div className="flex justify-between text-sm text-gray-400 mb-4 font-semibold">
-              <span>🎒 Backpacker (Budget)</span>
-              <span>🚗 Standard (Comfort)</span>
-              <span>👑 Luxury (Premium)</span>
+              <span>🎒 Backpacker</span>
+              <span>🚗 Comfort</span>
+              <span>👑 Luxury</span>
             </div>
             
             <input 
@@ -124,7 +155,6 @@ const PlaceDetails = () => {
         </div>
       </div>
 
-      {/* 🗺️ MAP SECTION */}
       <div className="mt-16">
         <h2 className="text-3xl font-bold mb-6 flex items-center gap-2">
           📍 Location Check
@@ -132,7 +162,6 @@ const PlaceDetails = () => {
         <PlaceMap coordinates={place.coordinates} name={place.name} />
       </div>
 
-      {/* 🍽️ FEATURE 4: WHAT TO EAT SECTION */}
       <div className="mt-16 mb-20">
         <h2 className="text-3xl font-bold mb-8 flex items-center gap-3">
           🍽️ Swaad Anusaar <span className="text-sm font-normal text-gray-400">(Must Try Dishes)</span>
@@ -153,7 +182,6 @@ const PlaceDetails = () => {
         </div>
       </div>
 
-      {/* 🎵 DAY 6 FEATURE: SONIC PLAYER */}
       <SonicPlayer src={place.musicUrl} placeName={place.name} />
 
     </div>

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 
-// ✅ SLIDESHOW LOGIC (Ab ye Signup par hai)
+// ✅ SLIDESHOW LOGIC
 const backgroundImages = Array.from({ length: 22 }, (_, i) => `/login-bg/${i + 1}.jpg`);
 
 const Signup = () => {
@@ -25,7 +25,7 @@ const Signup = () => {
       setCurrentImageIndex((prevIndex) => 
         prevIndex === backgroundImages.length - 1 ? 0 : prevIndex + 1
       );
-    }, 2000);
+    }, 4000); // 4 seconds thoda better lagta hai transition ke liye
 
     return () => clearInterval(interval);
   }, []);
@@ -60,21 +60,26 @@ const Signup = () => {
   return (
     <div className="min-h-screen flex items-center justify-center pt-20 px-4 relative overflow-hidden bg-black">
       
-      {/* 🖼️ DYNAMIC BACKGROUND SLIDESHOW */}
+      {/* 🖼️ DYNAMIC BACKGROUND SLIDESHOW (Updated for Clarity) */}
       {backgroundImages.map((img, index) => (
-        <div 
+        <img 
           key={index}
-          className={`absolute inset-0 bg-cover bg-center transition-opacity duration-2000 ease-in-out ${
+          src={img}
+          alt="Travel Background"
+          // 👇 Yahan 'object-cover' se image screen fit hogi. 
+          // Agar zabardasti poori image dikhani hai to 'object-cover' hata ke 'object-fill' kar dena.
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-2000 ease-in-out ${
             index === currentImageIndex ? 'opacity-100' : 'opacity-0'
           }`}
-          style={{ backgroundImage: `url('${img}')` }} 
-        ></div>
+        />
       ))}
 
+      {/* 🌑 Overlay */}
       <div className="absolute inset-0 bg-black/50 z-10"></div>
 
       <div className="glass p-8 rounded-2xl w-full max-w-md border border-white/10 shadow-2xl relative z-20 backdrop-blur-md">
         <h2 className="text-3xl font-bold text-center mb-2 text-white">Join the Tribe ⛺</h2>
+        {/* Tera Yellow Color 👇 */}
         <p className="text-center text-yellow-400 mb-8">Let's Become Awara</p>
 
         {error && (
@@ -127,7 +132,8 @@ const Signup = () => {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-3 text-green-500 hover:text-green transition"
+              // Tera Green Color 👇
+              className="absolute right-3 top-3 text-green-500 hover:text-green-400 transition"
             >
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
@@ -135,6 +141,7 @@ const Signup = () => {
 
           <button
             type="submit"
+            // Tera Button Style 👇
             className="w-full bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3 rounded-lg transition transform hover:-translate-y-1 shadow-lg"
           >
             Sign Up
