@@ -139,5 +139,46 @@ const getRandomPlace = async (req, res) => {
   }
 };
 
+// ⭐ Create or Update Review
+const createPlaceReview = async (req, res) => {
+  const { rating, comment } = req.body;
+  const place = await Place.findById(req.params.id);
+
+  if (place) {
+    // Check karo agar user ne pehle review diya hai (Edit Mode)
+    const alreadyReviewed = place.reviews.find(
+      (r) => r.user.toString() === req.user._id.toString()
+    );
+
+    if (alreadyReviewed) {
+      // Update Old Review
+      alreadyReviewed.rating = Number(rating);
+      alreadyReviewed.comment = comment;
+    } else {
+      // Create New Review
+      const review = {
+        name: req.user.username,
+        rating: Number(rating),
+        comment,
+        user: req.user._id,
+      };
+      place.reviews.push(review);
+      place.numReviews = place.reviews.length;
+    }
+
+    // Average Rating Calculation (Maths Magic 🧮)
+    place.rating =
+      place.reviews.reduce((acc, item) => item.rating + acc, 0) /
+      place.reviews.length;
+
+    await place.save();
+    res.status(201).json({ message: 'Review Added/Updated' });
+  } else {
+    res.status(404).json({ message: 'Place not found' });
+  }
+};
+
+// ⚠️ IMPORTANT: module.exports add 'createPlaceReview' 
+
 // ✅ Export mein 'createPlace' add kiya
-module.exports = { seedDatabase, getPlaces, getPlaceById, createPlace, getRandomPlace };
+module.exports = { seedDatabase, getPlaces, getPlaceById, createPlace, getRandomPlace,createPlaceReview };

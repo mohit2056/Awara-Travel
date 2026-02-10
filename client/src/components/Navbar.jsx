@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, User, LogOut } from 'lucide-react';
+import { Menu, X, User, LogOut, LayoutDashboard } from 'lucide-react'; // ✅ Icon add kiya
 import { AuthContext } from '../context/AuthContext';
 import logo from '../assets/logo.png';
 
@@ -38,7 +38,7 @@ const Navbar = () => {
               <Link to="/" className="hover:text-purple-400 transition">Home</Link>
               <Link to="/discover" className="hover:text-purple-400 transition">Discover</Link>
 
-              {/* ✅ Correct Desktop Blind Travel Link */}
+              {/* ✅ Blind Travel Link */}
               <Link to="/blind-travel" className="hover:text-purple-400 transition flex items-center gap-1">
                 🎲 <span className="hidden lg:inline">Blind Travel</span>
               </Link>
@@ -48,9 +48,19 @@ const Navbar = () => {
               {/* User Logic */}
               {user ? (
                 <div className="flex items-center gap-4 ml-4">
-                  <span className="text-purple-400 font-bold flex items-center gap-2">
+                  
+                  {/* ⭐ NEW: Dashboard Link (Only visible when logged in) */}
+                  <Link 
+                    to="/dashboard" 
+                    className="text-gray-300 hover:text-purple-400 transition flex items-center gap-1 font-medium"
+                  >
+                    <LayoutDashboard size={18} /> Dashboard
+                  </Link>
+
+                  <span className="text-purple-400 font-bold flex items-center gap-2 border-l border-white/20 pl-4">
                     <User size={18} /> Hi, {user.username}
                   </span>
+                  
                   <button
                     onClick={handleLogout}
                     className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-2 rounded-full hover:bg-red-500 hover:text-white transition flex items-center gap-2 text-sm"
@@ -86,13 +96,20 @@ const Navbar = () => {
             <Link to="/" className="block px-3 py-2 hover:bg-white/10 rounded-md text-white">Home</Link>
             <Link to="/discover" className="block px-3 py-2 hover:bg-white/10 rounded-md text-white">Discover</Link>
 
-            {/* ✅ Correct Mobile Blind Travel Link */}
+            {/* ✅ Blind Travel Link */}
             <Link to="/blind-travel" className="block px-3 py-2 hover:bg-white/10 rounded-md text-white items-center gap-2">
               🎲 Blind Travel
             </Link>
+            
+            <Link to="/about" className="block px-3 py-2 hover:bg-white/10 rounded-md text-white">About</Link>
 
             {user ? (
               <>
+                {/* ⭐ NEW: Mobile Dashboard Link */}
+                <Link to="/dashboard" className="block px-3 py-2 hover:bg-white/10 rounded-md text-purple-300 items-center gap-2">
+                   <LayoutDashboard size={18} /> My Dashboard
+                </Link>
+
                 <div className="px-3 py-2 text-purple-400 font-bold border-t border-white/10 mt-2">
                   Hi, {user.username} 👋
                 </div>

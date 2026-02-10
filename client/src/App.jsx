@@ -9,6 +9,7 @@ import SonicPlayer from './components/SonicPlayer';
 import Signup from './pages/Sigup';
 import Login from './pages/Login';
 import BlindTravel from './pages/BlindTravel';
+import Dashboard from './pages/Dashboard';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
           <Route path="/Login" element={<Login/>}/>
           <Route path="/Blind-Travel" element={<BlindTravel />} />
           <Route path="/about" element={<About />} />
+          <Route path="/dashboard" element={<Dashboard />} />
         </Routes>
       </main>
       <Footer />
