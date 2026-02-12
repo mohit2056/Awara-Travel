@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Awara Travel</title>
+    <script type="module" crossorigin src="/assets/index-2y_vu1wX.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-BE81isTM.css">
+  <link rel="manifest" href="/manifest.webmanifest"></head>
+  <body>
+    <div id="root"></div>
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+              console.log('✅ Service Worker Registered! Scope:', registration.scope);
+            })
+            .catch(error => {
+              console.error('❌ Service Worker Registration Failed:', error);
+            });
+        });
+      }
+    </script>
+  </body>
+</html>
