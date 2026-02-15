@@ -4,44 +4,57 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const placeRoutes = require('./routes/placeRoutes');
 const authRoutes = require('./routes/authRoutes');
+const uploadRoutes = require('./routes/upload'); 
 
 // Load environment variables
 dotenv.config();
 
+// ❌ Purana 'connectDB()' hata diya kyunki hum neeche manually connect kar rahe hain
+// const connectDB = require('./config/db'); 
+
 const app = express();
 const port = process.env.PORT || 5000;
 
-// ⭐ MIDDLEWARES (Clean & Powerful)
-// 1. CORS: Sabse upar aur sabse simple rakho (Sab allowed)
+// ⭐ MIDDLEWARES
+// 1. CORS: Deployment ke liye sabse safe setting (Allow All)
 app.use(cors()); 
+// Note: Jab frontend deploy ho jayega, tab hum ise specific domain par lock kar sakte hain.
 
 // 2. Body Parsers
-app.use(express.json()); // JSON data padhne ke liye
-app.use(express.urlencoded({ extended: true })); // Form data ke liye
+app.use(express.json()); 
+app.use(express.urlencoded({ extended: true })); 
 
 // ⭐ ROUTES
 app.use('/api/places', placeRoutes);
 app.use('/api/users', authRoutes);
+app.use('/api/upload', uploadRoutes);
 
-// Root Route (Testing)
+// Root Route (Health Check for Render)
 app.get('/', (req, res) => {
   res.send('API is running... Awara Server is Live! 🔥');
 });
 
-// ⭐ MONGODB CONNECTION
-// Note: Agar .env kaam na kare toh wapas 'mongodb://127.0.0.1:27017/awara_travel' likh dena
-mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/awara_travel')
+// ⭐ MONGODB CONNECTION (Production Safe)
+// Render par hum sirf process.env.MONGO_URI use karenge
+const DB_URI = process.env.MONGO_URI;
+
+if (!DB_URI) {
+    console.error("❌ Error: MONGO_URI .env file mein nahi mila!");
+    // Crash mat karwana, bas error dikhana
+}
+
+mongoose.connect(DB_URI || 'mongodb://127.0.0.1:27017/awara_travel')
   .then(() => {
-    console.log('MongoDB Connected via Mongoose! 🔥');
+    console.log('✅ MongoDB Connected Successfully!');
     
-    // Server start only after DB connects
+    // Server tabhi start hoga jab DB connect ho jaye (Best Practice)
     app.listen(port, () => {
-      console.log(`Server listening on port ${port}`);
+      console.log(`🚀 Server listening on port ${port}`);
     });
   })
   .catch((err) => {
-    console.error('MongoDB connection error:', err);
-    process.exit(1);
+    console.error('❌ MongoDB Connection Error:', err);
+    // Process exit mat karwana taki Render restart try kar sake
   });
 
 // ⭐ GLOBAL ERROR HANDLER

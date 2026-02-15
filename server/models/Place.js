@@ -1,68 +1,96 @@
 const mongoose = require('mongoose');
 
-// 1. Review Schema (Ek alag chhota schema reviews ke liye)
+// ---------------------------------------------------
+// 1️⃣ REVIEW SCHEMA (Sub-document for Reviews)
+// ---------------------------------------------------
 const reviewSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  rating: { type: Number, required: true },
-  comment: { type: String, required: true },
+  name: { 
+    type: String, 
+    required: true 
+  },
+  rating: { 
+    type: Number, 
+    required: true 
+  },
+  comment: { 
+    type: String, 
+    required: true 
+  },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
-    ref: 'User', // User ID se link kiya taaki pata chale kisne review diya
+    ref: 'User', // User model se link
   },
 }, {
-  timestamps: true,
+  timestamps: true, // CreatedAt automatically aa jayega
 });
 
-// 2. Main Place Schema
+// ---------------------------------------------------
+// 2️⃣ MAIN PLACE SCHEMA
+// ---------------------------------------------------
 const placeSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  description: { type: String, required: true },
-  location: { type: String, required: true }, 
+  // 📝 Basic Details
+  name: { 
+    type: String, 
+    required: [true, "Place name is required"] 
+  },
+  description: { 
+    type: String, 
+    required: [true, "Description is required"] 
+  },
+  location: { 
+    type: String, 
+    required: [true, "Location (City/State) is required"] 
+  },
 
-  // coordinates for map feature
+  // 💰 Budget (Important for Frontend)
+  avgCost: { 
+    type: Number, 
+    required: [true, "Average Cost is required"] 
+  },
+
+  // 📍 Map Coordinates (Google Maps Link ke liye)
   coordinates: {
     lat: { type: Number, required: true },
     lng: { type: Number, required: true },
   },
 
-  // Images
-  images: [{ type: String }], 
+  // 🖼️ Images (Array of URLs)
+  images: [String], 
 
-  // Feature 10: Mood-Based Discovery 
-  moodTags: [{
-    type: String,
-    enum: ['Peace', 'Party', 'Thrill', 'Romantic', 'Spiritual', 'Family']
-  }],
+  // 🏷️ Discovery Tags (Peace, Party, Thrill, Spiritual)
+  moodTags: [String],
 
-  // Feature 8: Hidden Gems vs Tourist Traps 
-  isHiddenGem: { type: Boolean, default: false },
+  // 💎 Filter: Hidden Gems
+  isHiddenGem: { 
+    type: Boolean, 
+    default: false 
+  },
 
-  // Feature 5: Sonic Trips (Audio Ambience) 
+  // 🥘 Foodie Feature
+  mustTryDishes: [String],
+
+  // 🎵 Future Features (Audio/Music) - Optional rakh rahe hain abhi
   musicUrl: { type: String }, 
-
-  // Feature 2: Audio Guide 
   audioGuideUrl: { type: String }, 
 
-  // Feature 9: Kharcha Estimator 
-  avgCost: { type: Number, required: true }, 
-
-  // Feature 4: Food Integration 
-  mustTryDishes: [{ type: String }],
-
-  // 🌟 NEW: Reviews & Ratings Section (Added for Day 11)
-  reviews: [reviewSchema], // Upar wala schema yahan list banega
+  // ⭐ Reviews & Ratings Calculation
+  reviews: [reviewSchema], 
+  
   rating: {
     type: Number,
     required: true,
-    default: 0, // Average Rating (e.g., 4.5)
+    default: 0, // Average Rating (e.g. 4.5)
   },
+  
   numReviews: {
     type: Number,
     required: true,
-    default: 0, // Total kitne logon ne review diya
+    default: 0, // Total reviews count
   },
 
-}, { timestamps: true });
+}, { 
+  timestamps: true 
+});
 
 module.exports = mongoose.model('Place', placeSchema);

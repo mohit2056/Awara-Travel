@@ -8,7 +8,7 @@ const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  
+
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -39,7 +39,7 @@ const Login = () => {
   return (
     // 👇 PageTransition se wrap kiya (Smooth Animation ke liye)
     <PageTransition>
-      <div 
+      <div
         className="min-h-screen flex items-center justify-center pt-20 px-4 bg-cover bg-center bg-no-repeat relative"
         style={{ backgroundImage: "url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop')" }}
       >
@@ -80,6 +80,16 @@ const Login = () => {
                 onChange={handleChange}
                 required
               />
+              {/* Password Input ke baad aur Button se pehle */}
+
+              <div className="flex justify-end">
+                <Link
+                  to="/forgot-password"
+                  className="text-sm text-purple-400 hover:text-purple-300 transition hover:underline"
+                >
+                  Forgot Password?
+                </Link>
+              </div>
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}

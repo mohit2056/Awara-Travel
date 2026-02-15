@@ -9,15 +9,15 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       injectRegister: 'auto',
-      registerType: 'autoUpdate', 
+      registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
-      
-      // 👇 IMPORTANT: Dev mode mein PWA chalane ke liye ye zaroori hai
+
+      // 👇 Dev mode mein install button check karne ke liye
       devOptions: {
         enabled: true,
-        type: 'module',
       },
 
+      // 👇 Ye zaroori hai App Install hone ke liye (Naam, Icon, Color)
       manifest: {
         name: 'Awara Travel',
         short_name: 'Awara',
@@ -42,29 +42,12 @@ export default defineConfig({
         ],
       },
 
+      // 👇 Caching Logic ko minimal kar diya (Sirf purana kachra saaf karega)
       workbox: {
-        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10MB limit
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-
-        // 👇 Data Caching Rule (API calls ko save karne ke liye)
-        runtimeCaching: [{
-          urlPattern: ({ url }) => url.href.includes('/api/places'),
-          handler: 'NetworkFirst',
-          options: {
-            cacheName: 'api-data-cache',
-            expiration: {
-              maxEntries: 50,
-              maxAgeSeconds: 60 * 60 * 24, // 1 Din
-            },
-            cacheableResponse: {
-              statuses: [0, 200],
-            },
-          },
-        }],
-
-        clientsClaim: true,
-        skipWaiting: true,
         cleanupOutdatedCaches: true,
+        skipWaiting: true,
+        clientsClaim: true,
+        // Yahan se 'runtimeCaching' hata diya hai -> Matlab ab sab kuch Online chalega! 🌐
       },
     }),
   ],

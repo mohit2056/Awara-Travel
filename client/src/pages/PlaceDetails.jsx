@@ -1,233 +1,235 @@
 import React, { useEffect, useState, useContext, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { MapPin, ArrowLeft, Share2, Heart } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { MapPin, Clock, Award, Utensils, Star, Heart, Share2, Navigation } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
-import PageTransition from '../components/PageTransition'; // 👈 Animation Import
-
-// 👇 COMPONENTS IMPORT
-import PlaceMap from '../components/PlaceMap';
-import SonicPlayer from '../components/SonicPlayer';
+import PageTransition from '../components/PageTransition';
 import ReviewSection from '../components/ReviewSection';
-import KharchaEstimator from '../components/KharchaEstimator';
-import FoodGuide from '../components/FoodGuide';
+import Preloader from '../components/Preloader'; // 👈 Animation Import kiya
 
 const PlaceDetails = () => {
   const { id } = useParams();
   const { user } = useContext(AuthContext);
-  
-  const [place, setPlace] = useState(null);
-  const [isWishlisted, setIsWishlisted] = useState(false);
-  const [loading, setLoading] = useState(true);
 
-  // 🔄 1. FETCH PLACE DATA
+  // States
+  const [place, setPlace] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isWishlisted, setIsWishlisted] = useState(false);
+
+  // 🛠️ Helper: Format Currency (₹ 10,000)
+  const formatBudget = (amount) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  // 1. Fetch Place Data
   const fetchPlace = useCallback(async () => {
     try {
       const res = await fetch(`http://localhost:5000/api/places/${id}`);
       const data = await res.json();
       setPlace(data);
-      setLoading(false);
     } catch (error) {
       console.error("Error fetching place:", error);
-      setLoading(false);
+    } finally {
+      // Thoda artificial delay taaki animation dikhe (Optional)
+      setTimeout(() => setLoading(false), 800); 
     }
   }, [id]);
 
-  // Initial Load
+  // 2. Check Wishlist Status
   useEffect(() => {
-    fetchPlace();
-  }, [fetchPlace]);
-
-  // ❤️ 2. CHECK WISHLIST STATUS
-  useEffect(() => {
-    const checkWishlistStatus = async () => {
-      if (!user) return; 
-
+    const checkWishlist = async () => {
+      if (!user) return;
       try {
         const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-        if (!userInfo || !userInfo.token) return;
-
         const res = await fetch('http://localhost:5000/api/users/wishlist', {
           headers: { Authorization: `Bearer ${userInfo.token}` },
         });
-
         if (res.ok) {
-          const wishlistData = await res.json();
-          // Check if place exists in wishlist
-          const exists = wishlistData.some((item) => item.place?._id === id);
-          setIsWishlisted(exists);
+          const data = await res.json();
+          setIsWishlisted(data.some((item) => item.place?._id === id));
         }
-      } catch (err) {
-        console.error("Wishlist check failed", err);
-      }
+      } catch (err) { console.error(err); }
     };
+    fetchPlace();
+    checkWishlist();
+  }, [id, user, fetchPlace]);
 
-    checkWishlistStatus();
-  }, [user, id]);
-
-  // ❤️ 3. HANDLE WISHLIST TOGGLE
+  // 3. Handlers
   const handleWishlist = async () => {
-    if (!user) return alert("Please Login to Save! 🔒");
-
-    // Optimistic UI update
-    const previousState = isWishlisted;
+    if (!user) return alert("Login to save to wishlist! 🔒");
+    
+    // Optimistic UI Update
     setIsWishlisted(!isWishlisted);
 
     try {
       const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-      const res = await fetch('http://localhost:5000/api/users/wishlist', {
+      await fetch('http://localhost:5000/api/users/wishlist', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${userInfo.token}`,
+        headers: { 
+          'Content-Type': 'application/json', 
+          Authorization: `Bearer ${userInfo.token}` 
         },
         body: JSON.stringify({ placeId: id }),
       });
-
-      if (!res.ok) {
-        setIsWishlisted(previousState);
-        alert("Something went wrong with Wishlist!");
-      }
     } catch (error) {
-      setIsWishlisted(previousState);
-      console.error("Error:", error);
+      console.error("Wishlist Error:", error);
+      setIsWishlisted(!isWishlisted); // Revert on error
     }
   };
 
-  // 🔗 Share Logic
   const handleShare = async () => {
     const shareData = {
-      title: `Check out ${place?.name} on Awara!`,
-      text: `Found this amazing place: ${place?.name} in ${place?.location}. Let's go!`,
-      url: window.location.href,
+      title: place?.name,
+      text: `Check out this amazing place: ${place?.name} on Awara!`,
+      url: window.location.href
     };
-    try {
-      if (navigator.share) await navigator.share(shareData);
-      else {
-        await navigator.clipboard.writeText(window.location.href);
-        alert("Link copied! 📋");
-      }
-    } catch (err) { console.log("Share cancelled"); }
+    if (navigator.share) {
+      try { await navigator.share(shareData); } catch (err) {}
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      alert("Link copied to clipboard! 📋");
+    }
   };
 
-  // ⏳ Loading State
-  if (loading) return <div className="text-center py-20 text-xl animate-pulse text-white">Loading Vibes... ⏳</div>;
+  const openMaps = () => {
+    if (place?.coordinates) {
+      window.open(`https://www.google.com/maps/search/?api=1&query=${place.coordinates.lat},${place.coordinates.lng}`, '_blank');
+    }
+  };
 
-  // ❌ Error / Not Found State
-  if (!place) {
-    return (
-      <div className="text-center py-20">
-        <h2 className="text-3xl font-bold text-red-400 mb-4">404: Raasta Bhatak Gaye? 🤔</h2>
-        <Link to="/discover" className="bg-purple-600 px-6 py-3 rounded-full font-bold text-white hover:bg-purple-700 transition">
-          Wapas Discover Pe Jao
-        </Link>
-      </div>
-    );
-  }
+  // 🔄 LOADING STATE (Ab Animation Dikhega)
+  if (loading) return <Preloader />;
+
+  // ERROR STATE
+  if (!place) return <div className="text-center text-white pt-20">Place not found 😢</div>;
 
   return (
-    // 👇 PageTransition se wrap kiya
     <PageTransition>
-      <div className="pt-24 pb-10 min-h-screen px-4 max-w-7xl mx-auto text-white">
-        {/* Back Button */}
-        <Link to="/discover" className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition">
-          <ArrowLeft size={20} /> Back to Discover
-        </Link>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+      <div className="min-h-screen bg-gray-950 text-gray-100 font-sans selection:bg-purple-500/30">
+        
+        {/* 📸 HERO SECTION */}
+        <div className="relative h-[60vh] w-full overflow-hidden">
+          <motion.img 
+            initial={{ scale: 1.1 }} animate={{ scale: 1 }} transition={{ duration: 1.5 }}
+            src={place.images[0]} 
+            alt={place.name} 
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-linear-to-t from-gray-950 via-gray-900/40 to-transparent"></div>
           
-          {/* LEFT: INFO & HERO */}
-          <div>
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl mb-8 group h-96 border border-gray-700">
-              {/* 👇 Image Fix: Agar array empty ho toh default photo dikhao */}
-              <img 
-                src={place.images?.[0] || "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop"} 
-                alt={place.name} 
-                className="w-full h-full object-cover group-hover:scale-105 transition duration-700" 
-                onError={(e) => {
-                  e.target.src = "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop"; 
-                }}
-              />
-              {place.isHiddenGem && (
-                <span className="absolute top-4 left-4 bg-purple-600 text-sm font-bold px-3 py-1 rounded-full shadow-lg text-white border border-purple-400">
-                  💎 Hidden Gem
-                </span>
-              )}
+          <div className="absolute bottom-0 w-full p-6 md:p-12 max-w-7xl mx-auto">
+            {place.isHiddenGem && (
+              <span className="inline-block px-4 py-1.5 rounded-full bg-purple-600/90 backdrop-blur-md text-white text-xs font-bold uppercase tracking-wider mb-4 border border-purple-400/30 shadow-lg">
+                💎 Hidden Gem
+              </span>
+            )}
+            <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-2 drop-shadow-xl">{place.name}</h1>
+            <div className="flex items-center text-gray-200 text-lg">
+              <MapPin className="text-purple-400 mr-2" size={20} />
+              {place.location}
             </div>
+          </div>
+        </div>
 
-            <div className="flex justify-between items-start mb-4">
-              <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-linear-to-r from-purple-400 to-pink-500">
-                {place.name}
-              </h1>
-              <div className="flex gap-3">
-                {/* Share Button */}
-                <button onClick={handleShare} className="bg-gray-800 p-3 rounded-full hover:bg-gray-700 transition text-purple-400 border border-gray-600">
-                  <Share2 size={24} />
-                </button>
-                
-                {/* Heart Button */}
-                <button 
-                  onClick={handleWishlist} 
-                  className={`p-3 rounded-full transition border ${
-                    isWishlisted 
-                      ? 'bg-red-500/20 text-red-500 border-red-500/50' 
-                      : 'bg-gray-800 text-gray-400 hover:text-red-400 border-gray-600'
-                  }`}
-                >
-                  <Heart size={24} className={isWishlisted ? "fill-current" : ""} />
-                </button>
+        {/* 📝 MAIN CONTENT */}
+        <div className="max-w-7xl mx-auto px-4 py-12 grid grid-cols-1 lg:grid-cols-12 gap-10">
+          
+          {/* LEFT: Details */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+            className="lg:col-span-8 space-y-8"
+          >
+            {/* 💰 BUDGET & STATS ROW */}
+            <div className="grid grid-cols-3 gap-4 bg-gray-900/50 border border-gray-800 rounded-2xl p-6 shadow-xl backdrop-blur-sm">
+              <div className="text-center border-r border-gray-800">
+                <p className="text-gray-500 text-xs uppercase tracking-widest mb-1">Total Budget</p>
+                <p className="text-2xl md:text-3xl font-bold text-green-400 flex justify-center items-center gap-1">
+                   {formatBudget(place.avgCost)}
+                </p>
+              </div>
+              <div className="text-center border-r border-gray-800">
+                <p className="text-gray-500 text-xs uppercase tracking-widest mb-1">Rating</p>
+                <div className="flex items-center justify-center gap-1 text-2xl md:text-3xl font-bold text-yellow-400">
+                  {place.rating?.toFixed(1) || 'N/A'} <Star className="fill-current" size={20} />
+                </div>
+              </div>
+              <div className="text-center">
+                <p className="text-gray-500 text-xs uppercase tracking-widest mb-1">Reviews</p>
+                <p className="text-2xl md:text-3xl font-bold text-white">{place.numReviews || 0}</p>
               </div>
             </div>
 
-            <p className="flex items-center gap-2 text-gray-400 mb-6 text-lg">
-              <MapPin size={20} className="text-purple-400" /> {place.location}
-            </p>
-            <p className="text-gray-300 leading-relaxed text-lg mb-6">{place.description}</p>
-
-            <div className="flex flex-wrap gap-3 mb-8">
-              {place.moodTags?.map((tag, index) => (
-                <span key={index} className="bg-gray-800 px-4 py-2 rounded-full text-purple-300 border border-gray-700 text-sm font-medium">
-                  #{tag}
-                </span>
-              ))}
+            {/* DESCRIPTION */}
+            <div className="bg-gray-900 rounded-3xl p-8 border border-gray-800 relative overflow-hidden">
+               <div className="absolute top-0 right-0 p-8 opacity-5">
+                  <Award size={150} />
+               </div>
+               <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                 <span className="bg-purple-500/20 p-2 rounded-lg text-purple-400"><Award size={24}/></span> The Experience
+               </h3>
+               <p className="text-gray-300 text-lg leading-relaxed">{place.description}</p>
+               <div className="mt-6 pt-6 border-t border-gray-800 flex items-center gap-2 text-sm text-gray-500">
+                  <Clock size={16} /> <span>Suggested Duration: 2-3 Days</span>
+               </div>
             </div>
-          </div>
 
-          {/* RIGHT: KHARCHA ESTIMATOR */}
-          <div className="lg:mt-0 mt-8">
-            <KharchaEstimator avgCost={place.avgCost || 5000} />
-          </div>
+            {/* FOOD */}
+            {place.mustTryDishes?.length > 0 && (
+              <div>
+                 <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                   <span className="text-yellow-500"><Utensils size={28}/></span> Foodie's Paradise
+                 </h3>
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                   {place.mustTryDishes.map((dish, i) => (
+                     <div key={i} className="flex items-center gap-4 bg-gray-900 p-4 rounded-xl border border-gray-800 hover:border-yellow-500/40 transition">
+                       <span className="text-2xl">🍽️</span>
+                       <p className="text-gray-200 font-medium">{dish}</p>
+                     </div>
+                   ))}
+                 </div>
+              </div>
+            )}
+
+            {/* REVIEWS */}
+            <ReviewSection placeId={id} reviews={place.reviews || []} user={user} refreshPlace={fetchPlace} />
+          </motion.div>
+
+          {/* RIGHT: Sidebar Actions */}
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}
+            className="lg:col-span-4 space-y-6"
+          >
+            {/* MAP CARD */}
+            <div className="bg-gray-900 rounded-3xl overflow-hidden border border-gray-800 shadow-xl group cursor-pointer" onClick={openMaps}>
+              <div className="h-48 bg-gray-800 relative flex items-center justify-center overflow-hidden">
+                 <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Google_Maps_Logo_2020.svg/2275px-Google_Maps_Logo_2020.svg.png" className="w-full h-full object-cover opacity-40 group-hover:opacity-60 transition" alt="Map" />
+                 <button className="absolute bg-white text-gray-900 px-6 py-2 rounded-full font-bold shadow-lg flex items-center gap-2 transform group-hover:scale-105 transition">
+                    <Navigation size={18} /> View Location
+                 </button>
+              </div>
+              <div className="p-6">
+                 <p className="text-gray-400 text-sm">{place.location}</p>
+              </div>
+            </div>
+
+            {/* BUTTONS */}
+            <div className="grid grid-cols-2 gap-4">
+              <button onClick={handleWishlist} className={`flex flex-col items-center justify-center gap-2 p-6 rounded-3xl border transition ${isWishlisted ? 'bg-pink-600/20 border-pink-500/50 text-pink-400' : 'bg-gray-900 border-gray-800 text-gray-400 hover:bg-gray-800 hover:text-white'}`}>
+                <Heart size={28} className={isWishlisted ? "fill-current" : ""} />
+                <span className="font-bold text-sm">{isWishlisted ? 'Saved' : 'Save'}</span>
+              </button>
+              <button onClick={handleShare} className="flex flex-col items-center justify-center gap-2 p-6 rounded-3xl bg-gray-900 border border-gray-800 text-gray-400 hover:bg-gray-800 hover:text-white transition">
+                <Share2 size={28} />
+                <span className="font-bold text-sm">Share</span>
+              </button>
+            </div>
+          </motion.div>
+
         </div>
-
-        {/* MAP SECTION */}
-        <div className="mt-16">
-          <h2 className="text-3xl font-bold mb-6 flex items-center gap-2 text-white">📍 Location Check</h2>
-          <div className="rounded-xl overflow-hidden border border-gray-700 shadow-lg">
-            <PlaceMap coordinates={place.coordinates} name={place.name} />
-          </div>
-        </div>
-
-        {/* FOOD GUIDE */}
-        <div className="mt-16">
-           <FoodGuide dishes={place.mustTryDishes || []} />
-        </div>
-
-        {/* SONIC PLAYER (Audio) */}
-        {place.musicUrl && (
-          <div className="mt-16">
-            <SonicPlayer src={place.musicUrl} placeName={place.name} />
-          </div>
-        )}
-
-        {/* REVIEWS SECTION */}
-        <div className="mt-16 mb-10">
-          <ReviewSection 
-            placeId={id} 
-            reviews={place.reviews || []} 
-            user={user} 
-            refreshPlace={fetchPlace} 
-          />
-        </div>
-
       </div>
     </PageTransition>
   );

@@ -1,6 +1,6 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
+const nodemailer = require('nodemailer'); // 👈 Email bhejne ke liye zaroori
 
 // Token Generate Helper
 const generateToken = (id) => {
@@ -62,7 +62,53 @@ const authUser = async (req, res) => {
   }
 };
 
-// 3. Toggle Wishlist (Add/Remove)
+// ⭐ 3. Forgot Password (UPDATED WITH YOUR CREDENTIALS)
+const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    // Check agar user hai ya nahi
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found with this email" });
+    }
+
+    // 📨 Daakiya (Transporter) Setup
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: 'work.mohitsuroliya@gmail.com', // ✅ Tera Email
+        pass: 'ffmx kipr jbmg prqs',          // ✅ Tera App Password
+      },
+    });
+
+    // Email ka Content
+    const mailOptions = {
+      from: 'Awara Travel <work.mohitsuroliya@gmail.com>',
+      to: email,
+      subject: 'Reset Your Password - Awara Travel 🔒',
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; border: 1px solid #ddd; border-radius: 8px;">
+          <h2 style="color: #6b21a8;">Awara Password Reset</h2>
+          <p>Hi ${user.username},</p>
+          <p>You requested a password reset. Click the button below to set a new password:</p>
+          <a href="http://localhost:5173/reset-password/${user._id}" style="background: #6b21a8; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px;">Reset Password</a>
+          <p style="margin-top: 20px; color: #777; font-size: 12px;">Link valid for 10 minutes only.</p>
+        </div>
+      `,
+    };
+
+    // Email Bhejo
+    await transporter.sendMail(mailOptions);
+    res.status(200).json({ message: "Email sent successfully! Check your inbox." });
+
+  } catch (error) {
+    console.error("Email Error:", error);
+    res.status(500).json({ message: "Email could not be sent. Check backend logs." });
+  }
+};
+
+// 4. Toggle Wishlist (Add/Remove)
 const toggleWishlist = async (req, res) => {
   const { placeId } = req.body;
   const user = await User.findById(req.user._id);
@@ -76,7 +122,6 @@ const toggleWishlist = async (req, res) => {
       // Remove
       user.wishlist.splice(existingItemIndex, 1);
       await user.save();
-      // Populate karke bhejo taaki frontend turant update ho
       await user.populate('wishlist.place');
       res.status(200).json({ message: 'Removed from Wishlist 💔', wishlist: user.wishlist });
     } else {
@@ -91,11 +136,10 @@ const toggleWishlist = async (req, res) => {
   }
 };
 
-// ⭐ 4. Get Wishlist
+// 5. Get Wishlist
 const getWishlist = async (req, res) => {
   const user = await User.findById(req.user._id).populate('wishlist.place');
   if (user) {
-    // Filter out null places (agar koi place delete ho gayi ho database se)
     const validWishlist = user.wishlist.filter(item => item.place !== null);
     res.json(validWishlist);
   } else {
@@ -103,16 +147,15 @@ const getWishlist = async (req, res) => {
   }
 };
 
-// 5. Update Wishlist Note (Dream Notes)
+// 6. Update Wishlist Note
 const updateWishlistNote = async (req, res) => {
   const { placeId, note } = req.body;
   const user = await User.findById(req.user._id);
 
   if (user) {
-    // Dhyan rakhna: item.place database mein ObjectId hota hai, isliye .toString() zaroori hai
     const item = user.wishlist.find((item) => item.place.toString() === placeId);
     if (item) {
-      item.note = note; // Update Note
+      item.note = note;
       await user.save();
       res.status(200).json({ message: 'Note Saved! 📝' });
     } else {
@@ -122,12 +165,33 @@ const updateWishlistNote = async (req, res) => {
     res.status(404).json({ message: 'User not found' });
   }
 };
+// ⭐ NEW: RESET PASSWORD FUNCTION
+const resetPassword = async (req, res) => {
+  const { id } = req.params;
+  const { password } = req.body;
 
-// ✅ EXPORTS: Ensure karna ye 5 naam yahan hon
+  try {
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Password direct update karo (Mongoose pre-save hook apne aap hash kar dega)
+    user.password = password;
+    await user.save();
+
+    res.status(200).json({ message: "Password updated successfully! Login now." });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+// ✅ EXPORTS
 module.exports = { 
-    registerUser, 
-    authUser, 
-    toggleWishlist, 
-    getWishlist, 
-    updateWishlistNote 
+  registerUser, 
+  authUser, 
+  forgotPassword, 
+  resetPassword,
+  toggleWishlist, 
+  getWishlist, 
+  updateWishlistNote 
 };

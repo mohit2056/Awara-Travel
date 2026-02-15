@@ -5,7 +5,7 @@ import { User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import PageTransition from '../components/PageTransition'; // 👈 Animation Import
 
 // ✅ SLIDESHOW LOGIC
-const backgroundImages = Array.from({ length: 23 }, (_, i) => `/login-bg/${i + 1}.jpg`);
+const backgroundImages = Array.from({ length: 26 }, (_, i) => `/login-bg/${i + 1}.jpg`);
 
 const Signup = () => {
   const [formData, setFormData] = useState({ username: '', email: '', password: '' });
