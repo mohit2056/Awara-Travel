@@ -1,10 +1,10 @@
 // client/src/config.js
 
-// Jab deploy karenge, tab isko 'true' kar denge
-const isProduction = false; 
+// 👇 1. Isko 'true' kar de. Ab hum Live Server use karenge!
+const isProduction = true; 
 
-// Jab backend live ho jayega, uska URL yahan daalenge
-const productionURL = "https://tera-backend-app.onrender.com"; 
+// 👇 2. Yahan apna sahi Render wala link daal (Last mein '/' mat lagana)
+const productionURL = "https://awara-travel.onrender.com"; 
 
 export const API_BASE_URL = isProduction 
   ? productionURL 
