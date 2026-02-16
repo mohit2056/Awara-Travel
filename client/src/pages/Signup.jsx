@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import PageTransition from '../components/PageTransition'; 
-import { API_BASE_URL } from '../config'; // ✅ Sahi hai!
+import { API_BASE_URL } from '../config'; 
 
 // ✅ SLIDESHOW LOGIC
 const backgroundImages = Array.from({ length: 26 }, (_, i) => `/login-bg/${i + 1}.jpg`);
@@ -42,9 +42,11 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // 👇 Galti Sudhar Di: '/login' ki jagah '/' (ya '/register') hoga
-      // Standard backend mein 'POST /api/users' naya user banata hai.
-      const res = await fetch(`${API_BASE_URL}/api/users`, { 
+      // 👇👇 YAHAN GALTI THI (Maine sudhar di) 👇👇
+      // Pehle tha: `${API_BASE_URL}/api/users` (Jo 404 de raha tha)
+      // Ab hai:    `${API_BASE_URL}/api/users/register` (Jo sahi hai)
+      
+      const res = await fetch(`${API_BASE_URL}/api/users/register`, { 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
