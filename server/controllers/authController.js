@@ -1,6 +1,6 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer'); // 👈 Email bhejne ke liye zaroori
+const nodemailer = require('nodemailer');
 
 // Token Generate Helper
 const generateToken = (id) => {
@@ -62,29 +62,35 @@ const authUser = async (req, res) => {
   }
 };
 
-// ⭐ 3. Forgot Password (UPDATED WITH YOUR CREDENTIALS)
+// ⭐ 3. Forgot Password (SECURE & LIVE READY)
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
 
   try {
-    // Check agar user hai ya nahi
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: "User not found with this email" });
     }
 
     // 📨 Daakiya (Transporter) Setup
+    // 👇 Ab ye .env file se values lega (Secure)
     const transporter = nodemailer.createTransport({
       service: 'gmail',
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
       auth: {
-        user: 'work.mohitsuroliya@gmail.com', // ✅ Tera Email
-        pass: 'ffmx kipr jbmg prqs',          // ✅ Tera App Password
+        user: process.env.EMAIL_USER, 
+        pass: process.env.EMAIL_PASS,
       },
+      family: 4, // 👈 IPv4 Force (Render issue fix)
     });
 
-    // Email ka Content
+    // 👇 Live URL use karega
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+
     const mailOptions = {
-      from: 'Awara Travel <work.mohitsuroliya@gmail.com>',
+      from: `Awara Travel <${process.env.EMAIL_USER}>`,
       to: email,
       subject: 'Reset Your Password - Awara Travel 🔒',
       html: `
@@ -92,13 +98,14 @@ const forgotPassword = async (req, res) => {
           <h2 style="color: #6b21a8;">Awara Password Reset</h2>
           <p>Hi ${user.username},</p>
           <p>You requested a password reset. Click the button below to set a new password:</p>
-          <a href="http://localhost:5173/reset-password/${user._id}" style="background: #6b21a8; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px;">Reset Password</a>
+          
+          <a href="${clientUrl}/reset-password/${user._id}" style="background: #6b21a8; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px;">Reset Password</a>
+          
           <p style="margin-top: 20px; color: #777; font-size: 12px;">Link valid for 10 minutes only.</p>
         </div>
       `,
     };
 
-    // Email Bhejo
     await transporter.sendMail(mailOptions);
     res.status(200).json({ message: "Email sent successfully! Check your inbox." });
 
@@ -111,9 +118,14 @@ const forgotPassword = async (req, res) => {
 // 4. Toggle Wishlist (Add/Remove)
 const toggleWishlist = async (req, res) => {
   const { placeId } = req.body;
-  const user = await User.findById(req.user._id);
+  const user = await User.findById(req.user._id); // Assuming req.user is populated via middleware
 
   if (user) {
+    // Check if wishlist exists, initialize if not
+    if (!user.wishlist) {
+        user.wishlist = [];
+    }
+
     const existingItemIndex = user.wishlist.findIndex(
       (item) => item.place.toString() === placeId
     );
@@ -122,7 +134,11 @@ const toggleWishlist = async (req, res) => {
       // Remove
       user.wishlist.splice(existingItemIndex, 1);
       await user.save();
-      await user.populate('wishlist.place');
+      // Populate needs to be on the found user or result of save, 
+      // easiest is to re-fetch or use returned user if save returns it (User.save returns promise resolving to user)
+      // Standard pattern:
+      await user.populate('wishlist.place'); 
+      
       res.status(200).json({ message: 'Removed from Wishlist 💔', wishlist: user.wishlist });
     } else {
       // Add
@@ -140,7 +156,7 @@ const toggleWishlist = async (req, res) => {
 const getWishlist = async (req, res) => {
   const user = await User.findById(req.user._id).populate('wishlist.place');
   if (user) {
-    const validWishlist = user.wishlist.filter(item => item.place !== null);
+    const validWishlist = user.wishlist ? user.wishlist.filter(item => item.place !== null) : [];
     res.json(validWishlist);
   } else {
     res.status(404).json({ message: 'User not found' });
@@ -165,6 +181,7 @@ const updateWishlistNote = async (req, res) => {
     res.status(404).json({ message: 'User not found' });
   }
 };
+
 // ⭐ NEW: RESET PASSWORD FUNCTION
 const resetPassword = async (req, res) => {
   const { id } = req.params;
@@ -185,6 +202,7 @@ const resetPassword = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 // ✅ EXPORTS
 module.exports = { 
   registerUser, 
