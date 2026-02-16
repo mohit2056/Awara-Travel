@@ -77,14 +77,17 @@ const forgotPassword = async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
+      port: 587,
+      secure: false,
       auth: {
         user: process.env.EMAIL_USER, 
         pass: process.env.EMAIL_PASS,
       },
-      family: 4, // 👈 IPv4 Force (Render issue fix)
-    });
+      family: 4, // 👇 Ye extra security layer hai 587 ke liye
+  tls: {
+    rejectUnauthorized: false
+  }
+});
 
     // 👇 Live URL use karega
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
