@@ -1,15 +1,17 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom'; // 👈 1. Import Add Kiya
 import { Users, Heart, Compass, Globe, Map } from 'lucide-react';
 import PageTransition from '../components/PageTransition';
 
 const About = () => {
+  const navigate = useNavigate(); // 👈 2. Hook banaya
+
   return (
     <PageTransition>
       <div className="min-h-screen bg-black text-white overflow-hidden">
         
-        {/* 🌟 SECTION 1: HERO (Video/Image Background) */}
+        {/* 🌟 SECTION 1: HERO */}
         <div className="relative h-screen flex items-center justify-center text-center px-4">
-          {/* Background Image with Dark Overlay */}
           <div className="absolute inset-0 z-0">
             <img 
               src="https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?q=80&w=2070&auto=format&fit=crop" 
@@ -28,18 +30,16 @@ const About = () => {
             </p>
           </div>
           
-          {/* Scroll Down Indicator */}
           <div className="absolute bottom-10 animate-bounce text-gray-400">
             <p className="text-sm tracking-widest uppercase">Scroll to Explore</p>
             <div className="w-0.5 h-16 bg-gray-500 mx-auto mt-2"></div>
           </div>
         </div>
 
-        {/* 🌟 SECTION 2: OUR MISSION (Glass Cards) */}
+        {/* 🌟 SECTION 2: OUR MISSION */}
         <div className="relative py-24 px-4 bg-gray-900">
           <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10">
             
-            {/* Card 1 */}
             <div className="group relative bg-gray-800/50 backdrop-blur-md p-8 rounded-3xl border border-white/10 hover:border-purple-500/50 transition duration-500 hover:-translate-y-2">
               <div className="absolute -top-6 left-8 bg-purple-600 p-4 rounded-2xl shadow-lg shadow-purple-500/30 group-hover:scale-110 transition">
                 <Users size={32} className="text-white" />
@@ -50,7 +50,6 @@ const About = () => {
               </p>
             </div>
 
-            {/* Card 2 */}
             <div className="group relative bg-gray-800/50 backdrop-blur-md p-8 rounded-3xl border border-white/10 hover:border-pink-500/50 transition duration-500 hover:-translate-y-2">
               <div className="absolute -top-6 left-8 bg-pink-600 p-4 rounded-2xl shadow-lg shadow-pink-500/30 group-hover:scale-110 transition">
                 <Heart size={32} className="text-white" />
@@ -61,7 +60,6 @@ const About = () => {
               </p>
             </div>
 
-            {/* Card 3 */}
             <div className="group relative bg-gray-800/50 backdrop-blur-md p-8 rounded-3xl border border-white/10 hover:border-yellow-500/50 transition duration-500 hover:-translate-y-2">
               <div className="absolute -top-6 left-8 bg-yellow-500 p-4 rounded-2xl shadow-lg shadow-yellow-500/30 group-hover:scale-110 transition">
                 <Compass size={32} className="text-black" />
@@ -79,7 +77,6 @@ const About = () => {
         <div className="py-24 px-4 bg-black relative overflow-hidden">
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-16">
             
-            {/* Image Side */}
             <div className="w-full md:w-1/2 relative group">
               <div className="absolute -inset-4 bg-linear-to-r from-purple-600 to-pink-600 rounded-2xl blur-lg opacity-30 group-hover:opacity-60 transition duration-1000"></div>
               <img 
@@ -89,7 +86,6 @@ const About = () => {
               />
             </div>
 
-            {/* Text Side */}
             <div className="w-full md:w-1/2">
               <h2 className="text-5xl font-bold mb-6 text-white">
                 Not Just a Trip, <br/>
@@ -132,7 +128,12 @@ const About = () => {
           
           <div className="relative z-10 max-w-3xl mx-auto">
             <h2 className="text-4xl md:text-6xl font-bold text-white mb-8">Ready to get lost?</h2>
-            <button className="bg-white text-black text-xl font-bold px-10 py-4 rounded-full hover:bg-yellow-400 transition transform hover:-translate-y-1 hover:shadow-2xl flex items-center gap-3 mx-auto">
+            
+            {/* 👇 3. Button Action Add Kiya */}
+            <button 
+              onClick={() => navigate('/discover')}
+              className="bg-white text-black text-xl font-bold px-10 py-4 rounded-full hover:bg-yellow-400 transition transform hover:-translate-y-1 hover:shadow-2xl flex items-center gap-3 mx-auto"
+            >
               <Map size={24} /> Start Your Journey
             </button>
           </div>

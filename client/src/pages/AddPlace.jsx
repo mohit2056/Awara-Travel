@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { MapPin, DollarSign, Image as ImageIcon, Star, Globe, Utensils, UploadCloud } from 'lucide-react';
 import PageTransition from '../components/PageTransition';
+import { API_BASE_URL } from '../config'; // 👈 1. IMPORT ADDED
 
 const AddPlace = () => {
   const [formData, setFormData] = useState({
@@ -40,7 +41,8 @@ const AddPlace = () => {
 
     try {
       // 1. Send file to Backend (which sends to Cloudinary)
-      const res = await axios.post('http://localhost:5000/api/upload', formData, {
+      // 👇 2. CHANGE: Localhost removed, API_BASE_URL added
+      const res = await axios.post(`${API_BASE_URL}/api/upload`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
@@ -64,7 +66,8 @@ const AddPlace = () => {
     }
 
     try {
-      await axios.post('http://localhost:5000/api/places', formData);
+      // 👇 3. CHANGE: Localhost removed, API_BASE_URL added
+      await axios.post(`${API_BASE_URL}/api/places`, formData);
       setMessage('✅ Place Added Successfully!');
       
       // Reset Form

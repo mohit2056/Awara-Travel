@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
-import { MapPin, Heart, Frown, User, Globe, Trash2, NotebookPen, X, Save } from 'lucide-react';
-import PageTransition from '../components/PageTransition'; // 👈 Animation Import
+import { MapPin, Frown, Globe, Trash2, NotebookPen, X, Save } from 'lucide-react'; // Heart aur User hata diye kyunki use nahi ho rahe the
+import PageTransition from '../components/PageTransition';
+import { API_BASE_URL } from '../config'; // 👈 1. IMPORT ADD KIYA
 
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
@@ -21,7 +22,8 @@ const Dashboard = () => {
     const fetchWishlist = async () => {
       try {
         const token = JSON.parse(localStorage.getItem('userInfo')).token;
-        const res = await fetch('http://localhost:5000/api/users/wishlist', {
+        // 👇 2. CHANGE: URL Fixed
+        const res = await fetch(`${API_BASE_URL}/api/users/wishlist`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
@@ -41,7 +43,8 @@ const Dashboard = () => {
     e.stopPropagation();
     try {
       const token = JSON.parse(localStorage.getItem('userInfo')).token;
-      const res = await fetch('http://localhost:5000/api/users/wishlist', {
+      // 👇 3. CHANGE: URL Fixed
+      const res = await fetch(`${API_BASE_URL}/api/users/wishlist`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -70,7 +73,8 @@ const Dashboard = () => {
     setSavingNote(true);
     try {
       const token = JSON.parse(localStorage.getItem('userInfo')).token;
-      const res = await fetch('http://localhost:5000/api/users/wishlist/note', {
+      // 👇 4. CHANGE: URL Fixed
+      const res = await fetch(`${API_BASE_URL}/api/users/wishlist/note`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -96,7 +100,6 @@ const Dashboard = () => {
   if (!user) return <div className="text-center py-20 text-white text-xl">Login to access your den. 🔒</div>;
 
   return (
-    // 👇 PageTransition se wrap kiya (Smooth Animation ke liye)
     <PageTransition>
       <div className="min-h-screen bg-black text-white pb-20">
         

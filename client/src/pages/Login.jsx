@@ -2,7 +2,8 @@ import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import PageTransition from '../components/PageTransition'; // 👈 Animation Import Add Kiya
+import PageTransition from '../components/PageTransition';
+import { API_BASE_URL } from '../config'; // 👈 1. IMPORT ADD KIYA
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -19,7 +20,8 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:5000/api/users/login', {
+      // 👇 2. CHANGE: Localhost hata kar API_BASE_URL lagaya
+      const res = await fetch(`${API_BASE_URL}/api/users/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -37,7 +39,6 @@ const Login = () => {
   };
 
   return (
-    // 👇 PageTransition se wrap kiya (Smooth Animation ke liye)
     <PageTransition>
       <div
         className="min-h-screen flex items-center justify-center pt-20 px-4 bg-cover bg-center bg-no-repeat relative"
@@ -56,6 +57,7 @@ const Login = () => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* EMAIL INPUT */}
             <div className="relative">
               <Mail className="absolute left-3 top-3 text-purple-400" size={20} />
               <input
@@ -69,6 +71,7 @@ const Login = () => {
               />
             </div>
 
+            {/* PASSWORD INPUT */}
             <div className="relative">
               <Lock className="absolute left-3 top-3 text-purple-400" size={20} />
               <input
@@ -80,23 +83,25 @@ const Login = () => {
                 onChange={handleChange}
                 required
               />
-              {/* Password Input ke baad aur Button se pehle */}
-
-              <div className="flex justify-end">
-                <Link
-                  to="/forgot-password"
-                  className="text-sm text-purple-400 hover:text-purple-300 transition hover:underline"
-                >
-                  Forgot Password?
-                </Link>
-              </div>
+              
+              {/* Eye Button (Ab Sahi Jagah Hai) */}
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3 text-gray-400 hover:text-white transition" // Green ki jagah standard gray rakha hai taaki consistent lage
+                className="absolute right-3 top-3 text-gray-400 hover:text-white transition"
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
+            </div>
+
+            {/* Forgot Password Link (Input ke bahar nikala taaki design na toote) */}
+            <div className="flex justify-end">
+              <Link
+                to="/forgot-password"
+                className="text-sm text-purple-400 hover:text-purple-300 transition hover:underline"
+              >
+                Forgot Password?
+              </Link>
             </div>
 
             <button type="submit" className="w-full bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3 rounded-lg transition transform hover:-translate-y-1 shadow-lg">

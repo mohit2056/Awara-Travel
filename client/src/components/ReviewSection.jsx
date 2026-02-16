@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Star, Pencil, Trash2 } from 'lucide-react'; // Pencil icon add kiya
+import { Star, Pencil, Trash2 } from 'lucide-react'; 
+import { API_BASE_URL } from '../config'; // 👈 1. IMPORT ADD KIYA
 
 const ReviewSection = ({ placeId, reviews, user, refreshPlace }) => {
   const [rating, setRating] = useState(5);
@@ -17,7 +18,8 @@ const ReviewSection = ({ placeId, reviews, user, refreshPlace }) => {
     try {
       const token = JSON.parse(localStorage.getItem('userInfo')).token;
       
-      const res = await fetch(`http://localhost:5000/api/places/${placeId}/reviews`, {
+      // 👇 2. CHANGE: Localhost hata kar API_BASE_URL lagaya
+      const res = await fetch(`${API_BASE_URL}/api/places/${placeId}/reviews`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

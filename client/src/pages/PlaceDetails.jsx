@@ -5,7 +5,8 @@ import { MapPin, Clock, Award, Utensils, Star, Heart, Share2, Navigation } from 
 import { AuthContext } from '../context/AuthContext';
 import PageTransition from '../components/PageTransition';
 import ReviewSection from '../components/ReviewSection';
-import Preloader from '../components/Preloader'; // 👈 Animation Import kiya
+import Preloader from '../components/Preloader';
+import { API_BASE_URL } from '../config'; // 👈 1. IMPORT ADD KIYA
 
 const PlaceDetails = () => {
   const { id } = useParams();
@@ -28,7 +29,8 @@ const PlaceDetails = () => {
   // 1. Fetch Place Data
   const fetchPlace = useCallback(async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/places/${id}`);
+      // 👇 2. CHANGE: Localhost hata kar API_BASE_URL lagaya
+      const res = await fetch(`${API_BASE_URL}/api/places/${id}`);
       const data = await res.json();
       setPlace(data);
     } catch (error) {
@@ -45,7 +47,8 @@ const PlaceDetails = () => {
       if (!user) return;
       try {
         const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-        const res = await fetch('http://localhost:5000/api/users/wishlist', {
+        // 👇 3. CHANGE: URL Updated
+        const res = await fetch(`${API_BASE_URL}/api/users/wishlist`, {
           headers: { Authorization: `Bearer ${userInfo.token}` },
         });
         if (res.ok) {
@@ -67,7 +70,8 @@ const PlaceDetails = () => {
 
     try {
       const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-      await fetch('http://localhost:5000/api/users/wishlist', {
+      // 👇 4. CHANGE: URL Updated
+      await fetch(`${API_BASE_URL}/api/users/wishlist`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json', 
@@ -97,7 +101,8 @@ const PlaceDetails = () => {
 
   const openMaps = () => {
     if (place?.coordinates) {
-      window.open(`https://www.google.com/maps/search/?api=1&query=${place.coordinates.lat},${place.coordinates.lng}`, '_blank');
+      // 👇 5. CHANGE: Google Maps ka Link fix kiya (Syntax error tha)
+      window.open(`https://www.google.com/maps?q=${place.coordinates.lat},${place.coordinates.lng}`, '_blank');
     }
   };
 

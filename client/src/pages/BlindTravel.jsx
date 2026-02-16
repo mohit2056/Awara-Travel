@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Gift, MapPin, Loader, ArrowRight } from 'lucide-react';
-import PageTransition from '../components/PageTransition'; // 👈 Animation Import
+import PageTransition from '../components/PageTransition';
+import { API_BASE_URL } from '../config'; // 👈 1. IMPORT ADD KIYA
 
 const BlindTravel = () => {
   const [budget, setBudget] = useState(5000); // Default 5k
@@ -19,7 +20,8 @@ const BlindTravel = () => {
     // 🕒 Thoda fake delay taaki user ki heartbeat badhe (Experience!)
     setTimeout(async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/places/blind-date?budget=${budget}`);
+        // 👇 2. CHANGE: Localhost hata kar API_BASE_URL lagaya
+        const res = await fetch(`${API_BASE_URL}/api/places/blind-date?budget=${budget}`);
         const data = await res.json();
 
         if (res.ok) {
@@ -36,7 +38,6 @@ const BlindTravel = () => {
   };
 
   return (
-    // 👇 PageTransition se wrap kiya (Smooth Animation ke liye)
     <PageTransition>
       <div className="min-h-screen pt-24 px-4 bg-black text-white flex flex-col items-center justify-center relative overflow-hidden">
         
@@ -105,7 +106,6 @@ const BlindTravel = () => {
             <div className="glass p-2 rounded-2xl border border-white/20 shadow-[0_0_50px_rgba(236,72,153,0.3)] animate-fade-in-up bg-white/5 backdrop-blur-md">
               <div className="relative h-64 md:h-80 rounded-xl overflow-hidden group">
                 
-                {/* Image Logic Fix */}
                 <img 
                   src={result.images && result.images.length > 0 ? result.images[0] : "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop"} 
                   alt={result.name} 

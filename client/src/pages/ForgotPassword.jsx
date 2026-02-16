@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, ArrowLeft, Send } from 'lucide-react';
-import axios from 'axios'; // 👈 Axios Import Kiya
+import axios from 'axios';
 import PageTransition from '../components/PageTransition';
+import { API_BASE_URL } from '../config'; // 👈 1. IMPORT ADD KIYA
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -17,9 +18,9 @@ const ForgotPassword = () => {
     setMessage('');
 
     try {
-      // 👇 REAL BACKEND API CALL
-      // Hum email bhej rahe hain backend ko
-      const res = await axios.post('http://localhost:5000/api/users/forgot-password', { email });
+      // 👇 2. CHANGE: Localhost hata kar API_BASE_URL lagaya
+      // Hum email bhej rahe hain LIVE backend ko
+      const res = await axios.post(`${API_BASE_URL}/api/users/forgot-password`, { email });
       
       // Agar sab sahi raha:
       setMessage(res.data.message); 

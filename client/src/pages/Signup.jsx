@@ -2,7 +2,8 @@ import React, { useState, useContext, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import PageTransition from '../components/PageTransition'; // 👈 Animation Import
+import PageTransition from '../components/PageTransition'; 
+import { API_BASE_URL } from '../config'; // ✅ Sahi hai!
 
 // ✅ SLIDESHOW LOGIC
 const backgroundImages = Array.from({ length: 26 }, (_, i) => `/login-bg/${i + 1}.jpg`);
@@ -16,7 +17,7 @@ const Signup = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
-    // Preload Images (Browser cache mein daalne ke liye)
+    // Preload Images
     backgroundImages.forEach((src) => {
       const img = new Image();
       img.src = src;
@@ -26,7 +27,7 @@ const Signup = () => {
       setCurrentImageIndex((prevIndex) => 
         prevIndex === backgroundImages.length - 1 ? 0 : prevIndex + 1
       );
-    }, 2000); // 4 seconds ka gap
+    }, 2000); // 2 seconds
 
     return () => clearInterval(interval);
   }, []);
@@ -41,12 +42,16 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:5000/api/users/register', {
+      // 👇 Galti Sudhar Di: '/login' ki jagah '/' (ya '/register') hoga
+      // Standard backend mein 'POST /api/users' naya user banata hai.
+      const res = await fetch(`${API_BASE_URL}/api/users`, { 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
+      
       const data = await res.json();
+      
       if (res.ok) {
         login(data);
         navigate('/');
@@ -59,7 +64,6 @@ const Signup = () => {
   };
 
   return (
-    // 👇 PageTransition se wrap kiya (Smooth Animation ke liye)
     <PageTransition>
       <div className="min-h-screen flex items-center justify-center pt-20 px-4 relative overflow-hidden bg-black">
         

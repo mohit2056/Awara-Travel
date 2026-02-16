@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Lock, Eye, EyeOff, Save } from 'lucide-react';
 import axios from 'axios';
 import PageTransition from '../components/PageTransition';
+import { API_BASE_URL } from '../config'; // 👈 1. IMPORT ADD KIYA
 
 const ResetPassword = () => {
   const { id } = useParams(); // URL se User ID nikaalo
@@ -20,8 +21,9 @@ const ResetPassword = () => {
     setError('');
     
     try {
-      // Backend ko naya password bhejo
-      const res = await axios.post(`http://localhost:5000/api/users/reset-password/${id}`, { password });
+      // 👇 2. CHANGE: Localhost hata kar API_BASE_URL lagaya
+      const res = await axios.post(`${API_BASE_URL}/api/users/reset-password/${id}`, { password });
+      
       setMessage(res.data.message);
       
       // 2 second baad Login page par bhej do
