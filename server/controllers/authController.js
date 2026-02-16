@@ -73,19 +73,18 @@ const forgotPassword = async (req, res) => {
     }
 
     // 📨 Daakiya (Transporter) Setup
-    // 👇 Ab ye .env file se values lega (Secure)
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.EMAIL_USER, 
-        pass: process.env.EMAIL_PASS,
-      },
-      family: 4, // 👇 Ye extra security layer hai 587 ke liye
+const transporter = nodemailer.createTransport({
+  // 👇 IMPORTANT: 'service: gmail' hata diya taaki manual settings kaam karein
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false, // 587 ke liye false zaroori hai
+  auth: {
+    user: process.env.EMAIL_USER, 
+    pass: process.env.EMAIL_PASS,
+  },
+  family: 4, // 👈 IPv4 Force (Render connectivity fix)
   tls: {
-    rejectUnauthorized: false
+    rejectUnauthorized: false // 👈 Cloud platforms par connection block hone se bachayega
   }
 });
 
