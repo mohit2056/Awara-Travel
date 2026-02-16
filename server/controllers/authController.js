@@ -9,7 +9,9 @@ const generateToken = (id) => {
   });
 };
 
-// 1. Register User
+// ==========================================
+// 1. REGISTER USER
+// ==========================================
 const registerUser = async (req, res) => {
   const { username, email, password } = req.body;
 
@@ -18,14 +20,12 @@ const registerUser = async (req, res) => {
     throw new Error('Please add all fields');
   }
 
-  // Check if user exists
   const userExists = await User.findOne({ email });
   if (userExists) {
     res.status(400).json({ message: 'User already exists' });
     return;
   }
 
-  // Create User
   const user = await User.create({
     username,
     email,
@@ -44,10 +44,11 @@ const registerUser = async (req, res) => {
   }
 };
 
-// 2. Login User
+// ==========================================
+// 2. LOGIN USER
+// ==========================================
 const authUser = async (req, res) => {
   const { email, password } = req.body;
-
   const user = await User.findOne({ email });
 
   if (user && (await user.matchPassword(password))) {
@@ -62,7 +63,9 @@ const authUser = async (req, res) => {
   }
 };
 
-// ⭐ 3. Forgot Password (BREVO SMTP - NO BLOCKING 🚀)
+// ==========================================
+// ⭐ 3. FORGOT PASSWORD (HARDCODED CREDENTIALS FIX)
+// ==========================================
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
 
@@ -72,23 +75,22 @@ const forgotPassword = async (req, res) => {
       return res.status(404).json({ message: "User not found with this email" });
     }
 
-    // 📨 Daakiya (Transporter) - BREVO Config
-    // Ye Render par sabse stable chalta hai without Timeouts
+    /// 📨 DAAKIYA CONFIGURATION (Safe Mode - No Password in Code)
     const transporter = nodemailer.createTransport({
-      host: "smtp-relay.brevo.com",  // 👈 Brevo Server
-      port: 587,                     // 👈 Standard Port
-      secure: false,                 // 👈 False zaroori hai 587 ke liye
+      host: "smtp-relay.brevo.com",
+      port: 587,
+      secure: false,
       auth: {
-        user: process.env.BREVO_USER, // 👈 Render Env Variable se lega
-        pass: process.env.BREVO_PASS, // 👈 Render Env Variable se lega
+        user: process.env.BREVO_USER, // 👈 Ab hum Environment se uthayenge
+        pass: process.env.BREVO_PASS, // 👈 Password code se gayab
       },
     });
 
-    // 👇 Live URL
+    // Live URL Logic
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
 
     const mailOptions = {
-      from: `Awara Travel <${process.env.BREVO_USER}>`, // 👈 Sender wahi hona chahiye jo Brevo me hai
+      from: `Awara Travel <work.mohitsuroliya@gmail.com>`, // Sender must match auth user
       to: email, 
       subject: 'Reset Your Password - Awara Travel 🔒',
       html: `
@@ -104,7 +106,10 @@ const forgotPassword = async (req, res) => {
       `,
     };
 
+    console.log("Attempting to send email via HARDCODED Key...");
     await transporter.sendMail(mailOptions);
+    console.log("✅ Email Sent Successfully!");
+    
     res.status(200).json({ message: "Email sent successfully! Check your inbox." });
 
   } catch (error) {
@@ -113,30 +118,49 @@ const forgotPassword = async (req, res) => {
   }
 };
 
-// 4. Toggle Wishlist (Add/Remove)
+// ==========================================
+// 4. RESET PASSWORD
+// ==========================================
+const resetPassword = async (req, res) => {
+  const { id } = req.params;
+  const { password } = req.body;
+
+  try {
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.password = password; // Middleware will hash this
+    await user.save();
+
+    res.status(200).json({ message: "Password updated successfully! Login now." });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// ==========================================
+// 5. WISHLIST FUNCTIONS
+// ==========================================
 const toggleWishlist = async (req, res) => {
   const { placeId } = req.body;
   const user = await User.findById(req.user._id);
 
   if (user) {
-    if (!user.wishlist) {
-        user.wishlist = [];
-    }
+    if (!user.wishlist) user.wishlist = [];
 
     const existingItemIndex = user.wishlist.findIndex(
       (item) => item.place.toString() === placeId
     );
 
     if (existingItemIndex !== -1) {
-      // Remove
-      user.wishlist.splice(existingItemIndex, 1);
+      user.wishlist.splice(existingItemIndex, 1); // Remove
       await user.save();
       await user.populate('wishlist.place'); 
-      
       res.status(200).json({ message: 'Removed from Wishlist 💔', wishlist: user.wishlist });
     } else {
-      // Add
-      user.wishlist.push({ place: placeId, note: '' });
+      user.wishlist.push({ place: placeId, note: '' }); // Add
       await user.save();
       await user.populate('wishlist.place');
       res.status(200).json({ message: 'Added to Wishlist ❤️', wishlist: user.wishlist });
@@ -146,7 +170,6 @@ const toggleWishlist = async (req, res) => {
   }
 };
 
-// 5. Get Wishlist
 const getWishlist = async (req, res) => {
   const user = await User.findById(req.user._id).populate('wishlist.place');
   if (user) {
@@ -157,7 +180,6 @@ const getWishlist = async (req, res) => {
   }
 };
 
-// 6. Update Wishlist Note
 const updateWishlistNote = async (req, res) => {
   const { placeId, note } = req.body;
   const user = await User.findById(req.user._id);
@@ -176,27 +198,9 @@ const updateWishlistNote = async (req, res) => {
   }
 };
 
-// ⭐ 7. RESET PASSWORD FUNCTION
-const resetPassword = async (req, res) => {
-  const { id } = req.params;
-  const { password } = req.body;
-
-  try {
-    const user = await User.findById(id);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    user.password = password;
-    await user.save();
-
-    res.status(200).json({ message: "Password updated successfully! Login now." });
-  } catch (error) {
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
+// ==========================================
 // ✅ EXPORTS
+// ==========================================
 module.exports = { 
   registerUser, 
   authUser, 
