@@ -18,12 +18,14 @@ const registerUser = async (req, res) => {
     throw new Error('Please add all fields');
   }
 
+  // Check if user exists
   const userExists = await User.findOne({ email });
   if (userExists) {
     res.status(400).json({ message: 'User already exists' });
     return;
   }
 
+  // Create User
   const user = await User.create({
     username,
     email,
@@ -45,6 +47,7 @@ const registerUser = async (req, res) => {
 // 2. Login User
 const authUser = async (req, res) => {
   const { email, password } = req.body;
+
   const user = await User.findOne({ email });
 
   if (user && (await user.matchPassword(password))) {
@@ -59,7 +62,7 @@ const authUser = async (req, res) => {
   }
 };
 
-// ⭐ 3. Forgot Password (STABLE RENDER CONFIG)
+// ⭐ 3. Forgot Password (BREVO SMTP - NO BLOCKING 🚀)
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
 
@@ -69,32 +72,33 @@ const forgotPassword = async (req, res) => {
       return res.status(404).json({ message: "User not found with this email" });
     }
 
-    // 📨 Daakiya (Transporter) Setup - Updated for Stability
+    // 📨 Daakiya (Transporter) - BREVO Config
+    // Ye Render par sabse stable chalta hai without Timeouts
     const transporter = nodemailer.createTransport({
-      service: 'gmail', // 👈 Gmail service use karna best hai
+      host: "smtp-relay.brevo.com",  // 👈 Brevo Server
+      port: 587,                     // 👈 Standard Port
+      secure: false,                 // 👈 False zaroori hai 587 ke liye
       auth: {
-        user: process.env.EMAIL_USER, 
-        pass: process.env.EMAIL_PASS, // 👈 Apna 16-digit App Password use karein
+        user: process.env.BREVO_USER, // 👈 Render Env Variable se lega
+        pass: process.env.BREVO_PASS, // 👈 Render Env Variable se lega
       },
-      // Render par network errors se bachne ke liye extra settings:
-      pool: true,
-      maxConnections: 1,
-      socketTimeout: 20000, // 20 seconds
-      connectionTimeout: 20000,
     });
 
+    // 👇 Live URL
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
 
     const mailOptions = {
-      from: `"Awara Travel" <${process.env.EMAIL_USER}>`,
-      to: email,
+      from: `Awara Travel <${process.env.BREVO_USER}>`, // 👈 Sender wahi hona chahiye jo Brevo me hai
+      to: email, 
       subject: 'Reset Your Password - Awara Travel 🔒',
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; border: 1px solid #ddd; border-radius: 8px;">
           <h2 style="color: #6b21a8;">Awara Password Reset</h2>
           <p>Hi ${user.username},</p>
           <p>You requested a password reset. Click the button below to set a new password:</p>
+          
           <a href="${clientUrl}/reset-password/${user._id}" style="background: #6b21a8; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px;">Reset Password</a>
+          
           <p style="margin-top: 20px; color: #777; font-size: 12px;">Link valid for 10 minutes only.</p>
         </div>
       `,
@@ -104,8 +108,8 @@ const forgotPassword = async (req, res) => {
     res.status(200).json({ message: "Email sent successfully! Check your inbox." });
 
   } catch (error) {
-    console.error("Email Error Details:", error);
-    res.status(500).json({ message: "Server could not send email. Please try again later." });
+    console.error("❌ Email Error:", error);
+    res.status(500).json({ message: "Email failed to send. Check server logs." });
   }
 };
 
@@ -115,18 +119,23 @@ const toggleWishlist = async (req, res) => {
   const user = await User.findById(req.user._id);
 
   if (user) {
-    if (!user.wishlist) user.wishlist = [];
+    if (!user.wishlist) {
+        user.wishlist = [];
+    }
 
     const existingItemIndex = user.wishlist.findIndex(
       (item) => item.place.toString() === placeId
     );
 
     if (existingItemIndex !== -1) {
+      // Remove
       user.wishlist.splice(existingItemIndex, 1);
       await user.save();
       await user.populate('wishlist.place'); 
+      
       res.status(200).json({ message: 'Removed from Wishlist 💔', wishlist: user.wishlist });
     } else {
+      // Add
       user.wishlist.push({ place: placeId, note: '' });
       await user.save();
       await user.populate('wishlist.place');
@@ -178,15 +187,16 @@ const resetPassword = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    user.password = password; // Middleware will hash it if set up in Schema
+    user.password = password;
     await user.save();
 
     res.status(200).json({ message: "Password updated successfully! Login now." });
   } catch (error) {
-    res.status(500).json({ message: "Server error during password reset" });
+    res.status(500).json({ message: "Server error" });
   }
 };
 
+// ✅ EXPORTS
 module.exports = { 
   registerUser, 
   authUser, 
