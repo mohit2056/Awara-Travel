@@ -62,7 +62,7 @@ const authUser = async (req, res) => {
   }
 };
 
-// ⭐ 3. Forgot Password (SECURE & LIVE READY)
+// ⭐ 3. Forgot Password (RENDER TIMEOUT FIXED)
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
 
@@ -73,22 +73,19 @@ const forgotPassword = async (req, res) => {
     }
 
     // 📨 Daakiya (Transporter) Setup
-const transporter = nodemailer.createTransport({
-  // 👇 IMPORTANT: 'service: gmail' hata diya taaki manual settings kaam karein
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false, // 587 ke liye false zaroori hai
-  auth: {
-    user: process.env.EMAIL_USER, 
-    pass: process.env.EMAIL_PASS,
-  },
-  family: 4, // 👈 IPv4 Force (Render connectivity fix)
-  tls: {
-    rejectUnauthorized: false // 👈 Cloud platforms par connection block hone se bachayega
-  }
-});
+    // 👇 Ye 'Golden Config' hai Render ke liye
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,              // 👈 465 (SSL) par switch kiya (Timeout fix)
+      secure: true,           // 👈 465 ke liye TRUE zaroori hai
+      auth: {
+        user: process.env.EMAIL_USER, 
+        pass: process.env.EMAIL_PASS,
+      },
+      family: 4,              // 👈 Render IPv6 issue fix karne ke liye (Sabse Zaroori)
+    });
 
-    // 👇 Live URL use karega
+    // 👇 Live URL logic
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
 
     const mailOptions = {
@@ -120,10 +117,9 @@ const transporter = nodemailer.createTransport({
 // 4. Toggle Wishlist (Add/Remove)
 const toggleWishlist = async (req, res) => {
   const { placeId } = req.body;
-  const user = await User.findById(req.user._id); // Assuming req.user is populated via middleware
+  const user = await User.findById(req.user._id);
 
   if (user) {
-    // Check if wishlist exists, initialize if not
     if (!user.wishlist) {
         user.wishlist = [];
     }
@@ -136,9 +132,6 @@ const toggleWishlist = async (req, res) => {
       // Remove
       user.wishlist.splice(existingItemIndex, 1);
       await user.save();
-      // Populate needs to be on the found user or result of save, 
-      // easiest is to re-fetch or use returned user if save returns it (User.save returns promise resolving to user)
-      // Standard pattern:
       await user.populate('wishlist.place'); 
       
       res.status(200).json({ message: 'Removed from Wishlist 💔', wishlist: user.wishlist });
@@ -195,7 +188,6 @@ const resetPassword = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Password direct update karo (Mongoose pre-save hook apne aap hash kar dega)
     user.password = password;
     await user.save();
 
