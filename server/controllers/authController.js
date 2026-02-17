@@ -64,7 +64,7 @@ const authUser = async (req, res) => {
 };
 
 // ==========================================
-// ⭐ 3. FORGOT PASSWORD (HARDCODED CREDENTIALS FIX)
+// ⭐ 3. FORGOT PASSWORD (CORRECT CREDENTIALS + PORT 2525)
 // ==========================================
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
@@ -75,22 +75,24 @@ const forgotPassword = async (req, res) => {
       return res.status(404).json({ message: "User not found with this email" });
     }
 
-    /// 📨 DAAKIYA CONFIGURATION (Safe Mode - No Password in Code)
+    // 📨 DAAKIYA CONFIGURATION (Credentials from Screenshot)
     const transporter = nodemailer.createTransport({
       host: "smtp-relay.brevo.com",
-      port: 587,
+      port: 2525, // 👈 Port 587 Timeout deta hai, 2525 Open hai
       secure: false,
       auth: {
-        user: process.env.BREVO_USER, // 👈 Ab hum Environment se uthayenge
-        pass: process.env.BREVO_PASS, // 👈 Password code se gayab
+        // 👇 Ye Screenshot wala ASLI USERNAME hai (Gmail nahi)
+        user: "a284bb001@smtp-brevo.com", 
+        
+        // 👇 Ye Screenshot wala ASLI PASSWORD hai
+        pass: "M6DcnGF3gkHLJOjC", 
       },
     });
 
-    // Live URL Logic
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
 
     const mailOptions = {
-      from: `Awara Travel <work.mohitsuroliya@gmail.com>`, // Sender must match auth user
+      from: `"Awara Travel" <work.mohitsuroliya@gmail.com>`, // Sender Name Dikhega
       to: email, 
       subject: 'Reset Your Password - Awara Travel 🔒',
       html: `
@@ -106,7 +108,7 @@ const forgotPassword = async (req, res) => {
       `,
     };
 
-    console.log("Attempting to send email via HARDCODED Key...");
+    console.log("Attempting to send email via Brevo Port 2525...");
     await transporter.sendMail(mailOptions);
     console.log("✅ Email Sent Successfully!");
     
