@@ -66,7 +66,7 @@ const Home = () => {
             {/* Popular Tags */}
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               {/* 👇 Yahan maine 'Food' hata kar 'Adventure' kar diya hai */}
-              {['Jaipur', 'Udaipur', 'Hidden Gem','Extreme Sports'].map((tag) => (
+              {['Jaipur', 'Udaipur', 'Hidden Gem','Food'].map((tag) => (
                 <button
                   key={tag}
                   onClick={() => navigate(`/discover?search=${tag}`)}

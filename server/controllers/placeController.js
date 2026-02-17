@@ -13,52 +13,36 @@ const seedDatabase = async (req, res) => {
 };
 
 // ======================================================
-// 🛠️ Controller 2: Places Fetch (THE MAIN FIX 🔧)
+// 🛠️ Controller 2: Places Fetch (NORMAL & CLEAN 🧼)
 // ======================================================
 const getPlaces = async (req, res) => {
   try {
     const { type, search } = req.query;
     let filter = {};
 
-    // Debugging ke liye (Terminal me dikhega kya search ho raha hai)
-    console.log("\n🔍 Incoming Search:", search);
-
     // 1. Hidden Gem Filter
     if (type === 'hidden') {
       filter.isHiddenGem = true;
     }
 
-    // 2. Search Logic
+    // 2. Normal Search Logic (Sab kuch check karega)
     if (search) {
-      const searchTerm = search.toLowerCase().trim();
-
-      // ⭐ SPECIAL CHECK: Agar 'Extreme' ya 'Adventure' word aaye
-      if (searchTerm.includes('extreme') || searchTerm.includes('adventure')) {
-         console.log("✅ Detection: User wants Extreme Sports!");
-         
-         // Hum check karenge ki category mein 'Extreme' ya 'Adventure' word ho
-         filter.category = { $regex: 'Extreme|Adventure', $options: 'i' };
-      } 
-      // ⭐ NORMAL SEARCH
-      else {
-        filter.$or = [
-          { name: { $regex: search, $options: 'i' } },
-          { location: { $regex: search, $options: 'i' } },
-          { description: { $regex: search, $options: 'i' } },
-          { category: { $regex: search, $options: 'i' } },
-          { mustTryDishes: { $regex: search, $options: 'i' } }, // Food search
-          { moodTags: { $regex: search, $options: 'i' } } // Vibe search
-        ];
-      }
+      console.log("🔍 Searching for:", search);
+      
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { location: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { category: { $regex: search, $options: 'i' } },       // Category bhi normal search hogi
+        { mustTryDishes: { $regex: search, $options: 'i' } },  // Food search yahan se chalega
+        { moodTags: { $regex: search, $options: 'i' } }        // Vibe search (Peace, Chill etc.)
+      ];
     }
 
-    // Database Call
-    console.log("🛠️ Filter Applied:", JSON.stringify(filter));
-    
-    // Sort by _id: -1 taaki naye cards sabse upar dikhein
+    // Sort by _id: -1 (Latest places upar)
     const places = await Place.find(filter).sort({ _id: -1 });
     
-    console.log(`🎉 Found ${places.length} places to send.`);
+    console.log(`🎉 Found ${places.length} places.`);
     res.json(places);
 
   } catch (error) {
@@ -107,7 +91,7 @@ const createPlace = async (req, res) => {
       },
       moodTags: ["Explore"],
       mustTryDishes: foodArray,
-      category: "General" // Default category
+      category: "General"
     });
 
     const savedPlace = await newPlace.save();
