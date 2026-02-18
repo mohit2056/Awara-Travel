@@ -1,66 +1,79 @@
 const mongoose = require('mongoose');
 
+// ---------------------------------------------------
+// 1️⃣ REVIEW SCHEMA (Sub-document)
+// ---------------------------------------------------
+const reviewSchema = new mongoose.Schema({
+  name: { type: String },
+  rating: { type: Number, required: true },
+  comment: { type: String, required: true },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  },
+}, {
+  timestamps: true,
+});
+
+// ---------------------------------------------------
+// 2️⃣ MAIN PLACE SCHEMA
+// ---------------------------------------------------
 const placeSchema = new mongoose.Schema({
-  // 👇 Tere data ke hisaab se EXACT fields
   name: { 
     type: String, 
-    required: true 
+    required: [true, "Name is required"] 
   },
-  
   description: { 
     type: String 
   },
-  
   location: { 
     type: String, 
-    required: true 
+    required: [true, "Location is required"] 
   },
 
-  // 📍 Coordinates Object (Jaisa tere data me hai)
+  // 📍 Coordinates (Object matching your data)
   coordinates: {
-    lat: Number,
-    lng: Number
+    lat: { type: Number },
+    lng: { type: Number },
   },
 
-  // 🖼️ Images Array (Tere data me 'images' hai)
+  // 🖼️ Images (Array of strings)
   images: [String], 
 
-  // 🏷️ Tags
+  // 🏷️ Tags (Peace, Thrill, etc.)
   moodTags: [String],
-  
+
+  // 💎 Filter
   isHiddenGem: { 
     type: Boolean, 
     default: false 
   },
 
-  // 💰 PRICE MATCH: Tere data me 'avgCost' hai (11998)
+  // 💰 Budget Match (Exact field: avgCost)
   avgCost: { 
     type: Number, 
-    required: true 
+    required: [true, "Average Cost is required"] 
   },
 
   // 🥘 Food
   mustTryDishes: [String],
 
-  // ⭐ Rating & Reviews
-  rating: { type: Number, default: 0 },
-  numReviews: { type: Number, default: 0 },
+  // ⭐ Ratings & Reviews
+  reviews: [reviewSchema], 
   
-  reviews: [
-    {
-      user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-      name: String,
-      rating: Number,
-      comment: String,
-    }
-  ],
-
-  // 👤 Owner Link
-  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+  rating: {
+    type: Number,
+    default: 0,
+  },
+  
+  numReviews: {
+    type: Number,
+    default: 0,
+  },
 
 }, { 
-  timestamps: true, // createdAt, updatedAt apne aap aa jayega
-  strict: false     // 🚨 SAFETY: Agar koi extra field hua to error nahi dega
+  timestamps: true, // createdAt and updatedAt automatic handles
+  strict: false     // Taaki agar koi extra field ho to crash na ho
 });
 
 module.exports = mongoose.model('Place', placeSchema);
