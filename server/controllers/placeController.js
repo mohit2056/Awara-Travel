@@ -1,19 +1,20 @@
 const Place = require('../models/Place');
 
 // ======================================================
-// 🛠️ Controller 1: Database Seed (Clear DB)
+// 🛠️ Controller 1: Database Seed (Clear DB - Only Admin Use Ideally)
 // ======================================================
 const seedDatabase = async (req, res) => {
   try {
-    await Place.deleteMany({}); 
-    res.json({ message: "✅ Database Cleared! Ab sab saaf hai." });
+    // Safety: Ise comment kar sakte ho agar galti se delete nahi karna chahte
+    // await Place.deleteMany({}); 
+    res.json({ message: "Seed disabled for safety on live server." });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
 // ======================================================
-// 🛠️ Controller 2: Places Fetch (NORMAL & CLEAN 🧼)
+// 🛠️ Controller 2: Places Fetch (CRASH PROOF 🛡️)
 // ======================================================
 const getPlaces = async (req, res) => {
   try {
@@ -25,80 +26,106 @@ const getPlaces = async (req, res) => {
       filter.isHiddenGem = true;
     }
 
-    // 2. Normal Search Logic (Sab kuch check karega)
+    // 2. Search Logic (Safe Regex)
     if (search) {
       console.log("🔍 Searching for:", search);
+      const searchRegex = { $regex: search, $options: 'i' };
       
       filter.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { location: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-        { category: { $regex: search, $options: 'i' } },       // Category bhi normal search hogi
-        { mustTryDishes: { $regex: search, $options: 'i' } },  // Food search yahan se chalega
-        { moodTags: { $regex: search, $options: 'i' } }        // Vibe search (Peace, Chill etc.)
+        { name: searchRegex },
+        { location: searchRegex },
+        { description: searchRegex },
+        { category: searchRegex },
+        { moodTags: searchRegex },
+        { mustTryDishes: searchRegex }
       ];
     }
 
-    // Sort by _id: -1 (Latest places upar)
+    // 👇 POPULATE HATA DIYA (Kyuki agar owner ID exist nahi karti to crash hota hai)
+    // Sort by _id: -1 (Newest first)
     const places = await Place.find(filter).sort({ _id: -1 });
     
     console.log(`🎉 Found ${places.length} places.`);
     res.json(places);
 
   } catch (error) {
-    console.error("❌ SERVER ERROR:", error);
-    res.status(500).json({ error: "Server Error" });
+    console.error("❌ SERVER ERROR in getPlaces:", error);
+    res.status(500).json({ error: "Server Error Fetching Places" });
   }
 };
 
 // ======================================================
-// 🛠️ Controller 3: Single Place by ID
+// 🛠️ Controller 3: Single Place by ID (CRASH PROOF 🛡️)
 // ======================================================
 const getPlaceById = async (req, res) => {
   try {
-    const place = await Place.findById(req.params.id).populate('owner', 'username email');
-    if (!place) return res.status(404).json({ message: "Place not found." });
+    // 👇 Populate hata diya taaki 500 error na aaye agar owner missing ho
+    const place = await Place.findById(req.params.id);
+    
+    if (!place) {
+      return res.status(404).json({ message: "Place not found." });
+    }
+    
     res.json(place);
   } catch (error) {
-    res.status(500).json({ error: "Server Error" });
+    console.error("❌ SERVER ERROR in getPlaceById:", error);
+    // Agar ID format galat hai to 404, warna 500
+    if (error.kind === 'ObjectId') {
+        return res.status(404).json({ message: "Place not found" });
+    }
+    res.status(500).json({ error: "Server Error Fetching Place Details" });
   }
 };
 
 // ======================================================
-// 🛠️ Controller 4: Create Place
+// 🛠️ Controller 4: Create Place (FLEXIBLE ✨)
 // ======================================================
 const createPlace = async (req, res) => {
   try {
     const { title, location, description, price, image, isHiddenGem, lat, lng, food } = req.body;
 
-    if (!title || !location || !description || !price) {
-      return res.status(400).json({ message: "Please fill all required fields" });
+    // Basic Validation
+    if (!title || !location || !price) {
+      return res.status(400).json({ message: "Name, Location and Price are required" });
     }
 
     const foodArray = food ? food.split(',').map(item => item.trim()) : [];
 
+    // Flexible Data Structure (Dono fields bhar rahe hain safety ke liye)
     const newPlace = new Place({
       name: title,
+      title: title, // Backup
+      
       location: location,
-      description: description,
+      description: description || "No description provided",
+      
       avgCost: Number(price),
+      price: Number(price), // Backup
+      
       images: [image],
-      photos: [image], // Backup field
-      isHiddenGem: isHiddenGem,
+      photos: [image], // Backup
+      image: image,    // Backup
+      
+      isHiddenGem: isHiddenGem || false,
+      
       coordinates: { 
         lat: Number(lat) || 28.6139, 
         lng: Number(lng) || 77.2090 
       },
-      moodTags: ["Explore"],
+      
+      moodTags: ["Explore", "New"],
       mustTryDishes: foodArray,
-      category: "General"
+      category: "General",
+      
+      // Owner link kar rahe hain agar user logged in hai
+      owner: req.user ? req.user._id : null 
     });
 
     const savedPlace = await newPlace.save();
     res.status(201).json(savedPlace);
 
   } catch (error) {
-    console.error(error);
+    console.error("Create Error:", error);
     res.status(400).json({ message: error.message });
   }
 };
@@ -112,19 +139,18 @@ const getRandomPlace = async (req, res) => {
   try {
     let filter = {};
     if (budget) {
+        // avgCost check karega (aur backup price field bhi agar schema me alias hai)
         filter.avgCost = { $lte: Number(budget) };
     }
 
     const places = await Place.find(filter);
 
     if (places.length === 0) {
-      return res.status(404).json({ message: "Budget thoda tight hai, kuch aur try karo! 😅" });
+      return res.status(404).json({ message: "No places found in this budget! 😅" });
     }
 
     const randomIndex = Math.floor(Math.random() * places.length);
-    const randomPlace = places[randomIndex];
-
-    res.json(randomPlace);
+    res.json(places[randomIndex]);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -144,7 +170,7 @@ const createPlaceReview = async (req, res) => {
 
     if (place) {
       const alreadyReviewed = place.reviews.find(
-        (r) => r.user.toString() === user._id.toString()
+        (r) => r.user && r.user.toString() === user._id.toString()
       );
 
       if (alreadyReviewed) {
@@ -152,7 +178,7 @@ const createPlaceReview = async (req, res) => {
         alreadyReviewed.comment = comment;
       } else {
         const review = {
-          name: user.username || "User",
+          name: user.username || "Traveler",
           rating: Number(rating),
           comment,
           user: user._id,

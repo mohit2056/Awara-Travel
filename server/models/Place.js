@@ -1,96 +1,66 @@
 const mongoose = require('mongoose');
 
-// ---------------------------------------------------
-// 1️⃣ REVIEW SCHEMA (Sub-document for Reviews)
-// ---------------------------------------------------
-const reviewSchema = new mongoose.Schema({
-  name: { 
-    type: String, 
-    required: true 
-  },
-  rating: { 
-    type: Number, 
-    required: true 
-  },
-  comment: { 
-    type: String, 
-    required: true 
-  },
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: true,
-    ref: 'User', // User model se link
-  },
-}, {
-  timestamps: true, // CreatedAt automatically aa jayega
-});
-
-// ---------------------------------------------------
-// 2️⃣ MAIN PLACE SCHEMA
-// ---------------------------------------------------
 const placeSchema = new mongoose.Schema({
-  // 📝 Basic Details
+  // 👇 Tere data ke hisaab se EXACT fields
   name: { 
     type: String, 
-    required: [true, "Place name is required"] 
+    required: true 
   },
+  
   description: { 
-    type: String, 
-    required: [true, "Description is required"] 
+    type: String 
   },
+  
   location: { 
     type: String, 
-    required: [true, "Location (City/State) is required"] 
+    required: true 
   },
 
-  // 💰 Budget (Important for Frontend)
-  avgCost: { 
-    type: Number, 
-    required: [true, "Average Cost is required"] 
-  },
-
-  // 📍 Map Coordinates (Google Maps Link ke liye)
+  // 📍 Coordinates Object (Jaisa tere data me hai)
   coordinates: {
-    lat: { type: Number, required: true },
-    lng: { type: Number, required: true },
+    lat: Number,
+    lng: Number
   },
 
-  // 🖼️ Images (Array of URLs)
+  // 🖼️ Images Array (Tere data me 'images' hai)
   images: [String], 
 
-  // 🏷️ Discovery Tags (Peace, Party, Thrill, Spiritual)
+  // 🏷️ Tags
   moodTags: [String],
-
-  // 💎 Filter: Hidden Gems
+  
   isHiddenGem: { 
     type: Boolean, 
     default: false 
   },
 
-  // 🥘 Foodie Feature
+  // 💰 PRICE MATCH: Tere data me 'avgCost' hai (11998)
+  avgCost: { 
+    type: Number, 
+    required: true 
+  },
+
+  // 🥘 Food
   mustTryDishes: [String],
 
-  // 🎵 Future Features (Audio/Music) - Optional rakh rahe hain abhi
-  musicUrl: { type: String }, 
-  audioGuideUrl: { type: String }, 
+  // ⭐ Rating & Reviews
+  rating: { type: Number, default: 0 },
+  numReviews: { type: Number, default: 0 },
+  
+  reviews: [
+    {
+      user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      name: String,
+      rating: Number,
+      comment: String,
+    }
+  ],
 
-  // ⭐ Reviews & Ratings Calculation
-  reviews: [reviewSchema], 
-  
-  rating: {
-    type: Number,
-    required: true,
-    default: 0, // Average Rating (e.g. 4.5)
-  },
-  
-  numReviews: {
-    type: Number,
-    required: true,
-    default: 0, // Total reviews count
-  },
+  // 👤 Owner Link
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 
 }, { 
-  timestamps: true 
+  timestamps: true, // createdAt, updatedAt apne aap aa jayega
+  strict: false     // 🚨 SAFETY: Agar koi extra field hua to error nahi dega
 });
 
 module.exports = mongoose.model('Place', placeSchema);
