@@ -2,34 +2,41 @@ import React from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { ExternalLink } from 'lucide-react'; // 🆕 Icon add kiya
+import { ExternalLink } from 'lucide-react';
 
-// Icon Fix (Same as before)
+// Leaflet Icon Fix (Zaroori hai warna marker nahi dikhega)
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
 let DefaultIcon = L.icon({
-    iconUrl: icon,
-    shadowUrl: iconShadow,
-    iconSize: [25, 41],
-    iconAnchor: [12, 41]
+  iconUrl: icon,
+  shadowUrl: iconShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41]
 });
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
 const PlaceMap = ({ coordinates, name }) => {
-  if (!coordinates) return null;
+  // 🛡️ Safety: Agar database mein lat/lng nahi hai toh crash hone se bachayega
+  if (!coordinates || !coordinates.lat || !coordinates.lng) {
+    return (
+      <div className="h-full w-full flex items-center justify-center bg-gray-900 text-gray-500 rounded-2xl border border-white/10">
+        📍 Map coordinates not available
+      </div>
+    );
+  }
 
-  // 🌍 Google Maps Link Generator
-  const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${coordinates.lat},${coordinates.lng}`;
+  // ✅ BUG FIXED: Ekdum Sahi Google Maps URL (Direct exact location khulega)
+  const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${coordinates.lat},${coordinates.lng}`;
 
   return (
-    <div className="h-100 w-full rounded-2xl overflow-hidden shadow-lg border border-white/10 z-0 relative">
+    <div className="h-full w-full rounded-2xl overflow-hidden shadow-lg border border-white/10 z-0 relative group">
       <MapContainer 
         center={[coordinates.lat, coordinates.lng]} 
         zoom={13} 
         scrollWheelZoom={false} 
-        className="h-full w-full"
+        className="h-full w-full z-0"
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -41,7 +48,6 @@ const PlaceMap = ({ coordinates, name }) => {
             <div className="text-center p-1">
               <h3 className="font-bold text-gray-800 text-lg mb-2">{name}</h3>
               
-              {/* 🚀 Feature: Get Directions Button */}
               <a 
                 href={googleMapsUrl} 
                 target="_blank" 
@@ -55,15 +61,15 @@ const PlaceMap = ({ coordinates, name }) => {
         </Marker>
       </MapContainer>
 
-      {/* 🟢 Overlay Button (Map ke upar bhi dikhega) */}
+      {/* 🟢 Premium Overlay Button (Map ke upar chamkega) */}
       <a 
         href={googleMapsUrl}
         target="_blank" 
         rel="noopener noreferrer"
-        className="absolute bottom-4 right-4 z-400 bg-white text-gray-900 px-4 py-2 rounded-lg shadow-xl font-bold flex items-center gap-2 hover:bg-gray-100 transition text-sm"
+        className="absolute bottom-4 right-4 z-[400] bg-white text-gray-900 px-4 py-2 rounded-xl shadow-2xl font-bold flex items-center gap-2 hover:bg-gray-100 hover:scale-105 transition-transform text-sm border border-gray-200"
       >
         <img src="https://upload.wikimedia.org/wikipedia/commons/a/aa/Google_Maps_icon_%282020%29.svg" alt="GMap" className="w-5 h-5" />
-        Open in Google Maps
+        Open in Maps
       </a>
     </div>
   );
